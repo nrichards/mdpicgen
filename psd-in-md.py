@@ -1,14 +1,16 @@
 from psd_tools import PSDImage
 import os
 
+# Renders images sized to the bounding box of this layer
+BBOX_LAYER_NAME = "BG"
+
+layer_names = ['SHIFT - s', 'DIAL - d', 'B5 - 5']
+
 out_dirname = 'out'
 if not os.path.exists(out_dirname):
     os.mkdir(out_dirname)
 
 psd = PSDImage.open('test.psd')
-
-layer_names = ['SHIFT - s', 'DIAL - d', 'B5 - 5']
-# layer_names = ['B5 - 5']
 
 
 def match_layer(layer):
@@ -22,12 +24,28 @@ def match_layer(layer):
         return True
     return False
 
-# TODO crop to desired size
 
+
+bbox = None
+
+for layer in psd.descendants():
+    print(layer)
+    if BBOX_LAYER_NAME == layer.name:
+        bbox = layer.bbox
+        break
+
+if bbox is None:
+    print(f"Warning: Bounding box layer {BBOX_LAYER_NAME} not found. Output images will be full size.")
+    bbox = psd.bbox
+
+print(f'bbox {bbox}')
 
 image = psd.composite(
-    layer_filter=lambda layer: match_layer(layer))
+    viewport=bbox,
+    layer_filter=lambda candidate_layer: match_layer(candidate_layer))
 image.save(f'{out_dirname}/test.png')
+
+print(image.getbbox())
 
 # for layer in psd:
 #     print(layer)
