@@ -10,3 +10,8 @@
 .idea/**/usage.statistics.xml
 .idea/**/dictionaries
 .idea/**/shelf
+
+/__pycache__
+
+/full.md
+/full_firstcol_extract.txt

@@ -8,6 +8,10 @@ BG_LAYER_NAME: str = "BG"
 # NOTE: Trailing words in the layers are used to compose the resultant filename
 layer_names: [str] = ['SHIFT - s', 'SEQ PLAY - splay', 'DIAL - d']
 
+full_layer_names: [str] = layer_names + [BG_LAYER_NAME]
+
+bbox = None
+
 "BG"
 "LOOPER STOP - ls"
 "LOOPER PLAY - lplay"
@@ -32,32 +36,33 @@ layer_names: [str] = ['SHIFT - s', 'SEQ PLAY - splay', 'DIAL - d']
 out_dirname = 'out'
 
 
-def make_out():
+def make_out_dir():
     if not os.path.exists(out_dirname):
         os.mkdir(out_dirname)
 
 
-def layer_name_from(button_name):
+def layer_name_from_text(button_name):
     # TODO build a dictionary mapping words used in the Qun manual to layer names
     pass
 
 
-psd = PSDImage.open('test.psd')
-
-
-def match_layer(layer, names):
+def match_layer(layer, match_names):
     print(f'{layer.name}')
     if layer.name:
-        if layer.name in layer_names:
+        if layer.name in match_names:
             # print(f'matched, {layer.bbox}')
             return True
-    elif layer.parent.kind == 'group' and layer.parent.name in layer_names:
+        elif layer.parent is not None and layer.parent.kind == 'group' and layer.parent.name in match_names:
+            return True
+    elif layer.parent.kind == 'group' and layer.parent.name in match_names:
         # print(f'matched, {layer.bbox}')
         return True
+    else:
+        return match_layer(layer.parent, match_names)
+        # False
+    # elif match_layer(layer.parent, match_names):
+    #     return True
     return False
-
-
-bbox = None
 
 
 def find_bbox():
@@ -70,9 +75,6 @@ def find_bbox():
     if bbox is None:
         print(f"Warning: Bounding box layer {BG_LAYER_NAME} not found. Output images will be full size.")
         bbox = psd.bbox
-
-
-find_bbox()
 
 
 def gen_image_name(names):
@@ -89,15 +91,17 @@ def gen_image_name(names):
     return image_name
 
 
-full_layer_names: [str] = layer_names + [BG_LAYER_NAME]
+make_out_dir()
+
+psd = PSDImage.open('test.psd')
+
+find_bbox()
 
 image = psd.composite(
     viewport=bbox,
     layer_filter=lambda candidate_layer: match_layer(candidate_layer, full_layer_names))
 
 image.save(f'{out_dirname}/{gen_image_name(layer_names)}.png')
-
-print(image.getbbox())
 
 # for layer in psd:
 #     print(layer)
