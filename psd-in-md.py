@@ -47,15 +47,15 @@ def layer_name_from_text(button_name):
 
 
 def match_layer(layer, match_names):
-    print(f'{layer.name}')
+    print(f'inspecting \"{layer.name}\"')
     if layer.name:
         if layer.name in match_names:
-            # print(f'matched, {layer.bbox}')
+            print(f'matched {layer.name}, {layer.bbox}')
             return True
         elif layer.parent is not None and layer.parent.kind == 'group' and layer.parent.name in match_names:
             return True
     elif layer.parent.kind == 'group' and layer.parent.name in match_names:
-        # print(f'matched, {layer.bbox}')
+        print(f'matched {layer.name}, {layer.bbox}')
         return True
     else:
         return match_layer(layer.parent, match_names)
@@ -101,7 +101,12 @@ image = psd.composite(
     viewport=bbox,
     layer_filter=lambda candidate_layer: match_layer(candidate_layer, full_layer_names))
 
-image.save(f'{out_dirname}/{gen_image_name(layer_names)}.png')
+new_height = 48
+reduction_scalar = new_height / image.size[1]
+new_width = int(reduction_scalar * image.size[0])
+resized_image = image.resize([new_width, new_height])
+
+resized_image.save(f'{out_dirname}/{gen_image_name(layer_names)}.png')
 
 # for layer in psd:
 #     print(layer)
