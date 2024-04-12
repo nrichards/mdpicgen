@@ -1,6 +1,9 @@
 from psd_tools import PSDImage
 import os
 
+import modify_md
+from extract_md import format_markdown
+
 # Renders images sized to the bounding box of this layer
 BG_LAYER_NAME: str = "BG"
 
@@ -91,22 +94,21 @@ def gen_image_name(names):
     return image_name
 
 
-make_out_dir()
+def process_psd(psd_filename):
+    global psd
+    make_out_dir()
+    psd = PSDImage.open(psd_filename)
+    find_bbox()
+    image = psd.composite(
+        viewport=bbox,
+        layer_filter=lambda candidate_layer: match_layer(candidate_layer, full_layer_names))
+    new_height = 48
+    reduction_scalar = new_height / image.size[1]
+    new_width = int(reduction_scalar * image.size[0])
+    resized_image = image.resize([new_width, new_height])
+    resized_image.save(f'{out_dirname}/{gen_image_name(layer_names)}.png')
 
-psd = PSDImage.open('test.psd')
 
-find_bbox()
-
-image = psd.composite(
-    viewport=bbox,
-    layer_filter=lambda candidate_layer: match_layer(candidate_layer, full_layer_names))
-
-new_height = 48
-reduction_scalar = new_height / image.size[1]
-new_width = int(reduction_scalar * image.size[0])
-resized_image = image.resize([new_width, new_height])
-
-resized_image.save(f'{out_dirname}/{gen_image_name(layer_names)}.png')
 
 # for layer in psd:
 #     print(layer)
