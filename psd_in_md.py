@@ -1,8 +1,8 @@
 from psd_tools import PSDImage
 import os
 
-import modify_md
-from extract_md import format_markdown
+from modify_md import format_markdown
+from extract_md import extract_buttons
 
 # Renders images sized to the bounding box of this layer
 BG_LAYER_NAME: str = "BG"

@@ -32,12 +32,8 @@ Specifically this is designed for the needs of the Qun mk2 synthesizer project's
 
 Run from the command line.
 
-`python3 -m psd-in-md`
-
-Find output files in the `out` directory.
-
-* TODO: Specify the Markdown file
-* TODO: Specify the source PSD or component images files
+* `python3 __main__.py` - shows options
+* `python3 __main__.py test.md --psd_out_dir out --psd_file test.psd` - formats Markdown file, generates image to the `out` directory
 
 # Requirements
 

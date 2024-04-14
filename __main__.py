@@ -1,4 +1,4 @@
-from psd_in_md import format_markdown, process_psd
+from psd_in_md import format_markdown, process_psd, extract_buttons
 
 if __name__ == '__main__':
     import argparse
@@ -15,11 +15,18 @@ if __name__ == '__main__':
 
     parser.add_argument("md_file", type=str, help="Input filename for the Markdown file")
 
-    parser.add_argument("--psd_file", type=str, help="Input filename for the PSD file")
-    parser.add_argument("--psd_out_dir", default='out', type=str,
+    parser.add_argument("--psd-file", type=str, help="Input filename for the PSD file")
+    parser.add_argument("--psd-out-dir", default='out', type=str,
                         help="Output directory name for composited images, will be created (Default: 'out')")
 
+    parser.add_argument("--print-formatted", action='store_true', help="Print formatted Markdown to stdout")
+    parser.add_argument("--print-extract", action='store_true', help="Print extracted buttons to stdout")
+
     args = parser.parse_args()
+
+    extracted_buttons = extract_buttons(args.md_file)
+    if args.print_extract:
+        print(extracted_buttons)
 
     if args.psd_file:
         try:
@@ -29,4 +36,5 @@ if __name__ == '__main__':
             exit(1)
 
     formatted_text = format_markdown(args.md_file)
-    print(formatted_text)
+    if args.print_formatted:
+        print(formatted_text)
