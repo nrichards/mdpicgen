@@ -1,9 +1,11 @@
+## Test table
 
 Button | Function
 --|--
-B1 | barfy barf
-B2 <br> | fooby foo
-B3 <br> ![](./poop) | poop
+B1 | not supported, no br
+B2 <br> | supported, has br. will be updated with image link
+B3 <br> ![](./poop) | supported, has br, has image link
+ZORK | not supported, not recognized button
 
 
 
