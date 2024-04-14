@@ -1,15 +1,18 @@
+import re
 from typing import Dict
+from collections import Counter
 
 import mistletoe
 from mistletoe import markdown_renderer, ast_renderer
 from mistletoe.block_token import BlockToken, Heading, Paragraph, SetextHeading, Table, TableRow, TableCell
 from mistletoe.markdown_renderer import MarkdownRenderer
-from mistletoe.span_token import InlineCode, RawText, SpanToken
+from mistletoe.span_token import InlineCode, RawText, SpanToken, HtmlSpan, Image
 import csv
 import io
 
 # A table header label indicating its cells should be extracted. Must be the first column.
 HEADER_TRIGGER_KEY = "Button".lower()
+BUTTON_PATTERN_DELIMITER = "|"
 
 # TODO
 # Keep line-number of finding
@@ -32,55 +35,66 @@ class ExtractButtonsFromMarkdown:
     """
     Extracts button command sequences from tables in Markdown.
     """
-    buttons: [[str]] = []  # [ [ "SHIFT", "B1"], [ "SEQ PLAY" ] ]
+    buttons: [[str]] = []  # [ [ "SHIFT", "B1"], [ "SEQ PLAY" ] ] -- for example
 
-    button_pattern = []
+    require_br_tag = True  # "SHIFT + B1 <br> ..." -- default constraint
 
     def __init__(self, markdown_filename):
-        self.button_pattern = self.patterns_map_to_button_name()
+        self.button_patterns = self.patterns_map_to_button_name()
+
         with open(markdown_filename, "r") as fin:
             with MarkdownRenderer(normalize_whitespace=True) as renderer:
                 document = mistletoe.Document(fin)
+
+                # Extract buttons, following constraints and patterns, and store results
                 result = self.extract_document(document)
                 self.buttons = result
 
     def patterns_map_to_button_name(self) -> {str, str}:
         """
-        String patterns of button control found in a document, and their canonical names.
-        Case-insensitive.
-        Pipe (|) separates the word and its value.
+        String patterns of button control found in a document,
+        and their canonical names.
+        Patterns use regular expressions.
+        Case-insensitive, specially handled elsewhere by code.
+        Pipe (|) separates the word and its value. See BUTTON_PATTERN_DELIMITER.
         """
         pattern_to_canonical_button_name = """
-SHIFT | s
-1 | 1
-2 | 2
-3 | 3
-4 | 4
-5 | 5
-6 | 6
-7 | 7
-turn dial | dial
-dial | dial
-NO | n
-OK | o
-LOOPER PLAY | lplay
-LOOPER REC | lr
-REC | lr
-LOOPER STOP | ls
-MODE PLAY | mplay
-PARAM | param
-SYSTEM | sys
-SEQ PLAY | splay
+^SHIFT$ | s
+^[B]?(utton)?[ ]?1$ | 1
+^[B]?(utton)?[ ]?2$ | 2
+^[B]?(utton)?[ ]?3$ | 3
+^[B]?(utton)?[ ]?4$ | 4
+^[B]?(utton)?[ ]?5$ | 5
+^[B]?(utton)?[ ]?6$ | 6
+^[B]?(utton)?[ ]?7$ | 7
+^(turn)?[ ]?dial$ | dial
+^NO$ | n
+^OK$ | o
+^LOOPER PLAY$ | lplay
+^LOOPER REC$ | lr
+^REC$ | lr
+^LOOPER STOP$ | ls
+^MODE PLAY$ | mplay
+^PARAM$ | param
+^SYSTEM$ | sys
+^SEQ PLAY$ | splay
 """
         return self.load_constants_from_csv(pattern_to_canonical_button_name)
 
-    def load_constants_from_csv(self, csv_data: str, delimiter="|") -> {str, str}:
+    def load_constants_from_csv(self, csv_data: str, delimiter=BUTTON_PATTERN_DELIMITER) -> {re.Pattern, str}:
+        """
+        Return a dict of regular expressions and their equivalent string identifiers.
+
+        To be used to match button names to short-form, well-known button identifiers.
+        """
         constants = {}
         for row in csv.reader(io.StringIO(csv_data), delimiter=delimiter):
             if not row:
                 continue
             key, value = row
-            constants[key] = value
+            ks = key.strip()
+            kre = re.compile(ks, re.IGNORECASE)
+            constants[kre] = value.strip()
         return constants
 
     def extract_document(self, doc) -> [[str]]:
@@ -95,10 +109,10 @@ SEQ PLAY | splay
         if self.is_button_table(table):
             for element in table.children:
                 extract = self.extract_tablerow(element)
+                
+                # wrap subarray
                 if extract:
                     result = result + [extract]
-                else:
-                    print("no extract")
         return result
 
     def is_button_table(self, table) -> bool:
@@ -110,6 +124,7 @@ SEQ PLAY | splay
 
     def extract_tablerow(self, tablerow: mistletoe.block_token.TableRow) -> [str]:
         result = []
+        button_sequence = []
 
         # first cell: assumes first column of table
         cell = tablerow.children[0]
@@ -117,7 +132,14 @@ SEQ PLAY | splay
         # first token with user content: assumes "B1 <br> ![](path-to-image)", and extracts "B1"
         token = cell.children[0]
         if type(token) is RawText:
-            result = result + self.extract_rawtext(token)
+            button_sequence = self.extract_rawtext(token)
+
+        # constrain to require br-tag
+        if (button_sequence and
+                self.require_br_tag and
+                len(cell.children) > 1 and
+                type(cell.children[1]) is HtmlSpan):
+            result = result + button_sequence
 
         return result
 
@@ -125,60 +147,73 @@ SEQ PLAY | splay
         result = self.extract_button_sequence(rawtext.content)
         return result
 
-    def is_valid_sequence(self, candidates):
-        return False
-        # NICk
-        # for candidate in candidates:
-        #     if candidate:
-        #         case 'B1':
-        #         case 'B2':
-        #             return True
+    # def is_valid_sequence(self, candidates):
+    #     return False
+    #     # NICk
+    #     # for candidate in candidates:
+    #     #     if candidate:
+    #     #         case 'B1':
+    #     #         case 'B2':
+    #     #             return True
 
     def extract_button_sequence(self, text):
+        """
+        "SHIFT + B1" => "SHIFT", "B1"
+        "SHIFT + B1 (Long press)" => "SHIFT", "B1"
+        "SHIFT + B1 or B2" => "SHIFT", "B1", "B2"
+        TODO: "B1 and a smile" => []
+        TODO: "LEGENDARY" => []
+        TODO: "B[1-8]" => "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8" 
+        TODO: "B[1-3,5]" => "B1", "B2", "B3", "B5"
+         
+        :param text: 
+        :return: 
+        """
+        result = []
+
         # Split the sequence
-        result = text.split("+")
+        sequence = text.split("+")
 
         # Split based on atypical "or"
         or_sequence = []
-        for element in result:
+        for element in sequence:
             element = element.split("or")
             or_sequence = or_sequence + element
-        result = or_sequence
+        sequence = or_sequence
+
+        # Strip whitespace from beginning and end
+        sequence = list(map(str.strip, sequence))
+
+        filtered = []
+        poisoned = False
+        patterns = self.button_patterns.keys()
+        for element in sequence:
+            # constrain overall result to element's presence in recognized patterns
+            match_results = list(map(lambda pattern: pattern.search(element), patterns))
+
+            # count matches (non-None)
+            match_count = len(match_results) - Counter(match_results)[None]
+
+            # print(f"{match_count}: {l}")
+            if match_count > 0:
+                filtered = filtered + [element]
+            else:
+                print(f"could not find {element}")
+                poisoned = True
+        if poisoned:
+            sequence = []
+        else:
+            sequence = filtered
 
         # Remove (long press)
         # TODO
 
-        # Strip whitespace from beginning and end
-        result = list(map(str.strip, result))
-
-        # if not self.is_valid_sequence(result):
-        #     return []
+        result = sequence
 
         return result
 
 
-# table = mistletoe.markdown("""
-# | Name | Age |
-# |---|---|---|
-# | Alice | 25 |
-# | Bob | 30 |
-# """, markdown_renderer.MarkdownRenderer)
-
-# table = mistletoe.markdown("""
-# | Name | Age |
-# |---|---|---|
-# | Alice | 25 |
-# | Bob | 30 |
-# """, ast_renderer.AstRenderer)
-#
-# # Modify the contents of the table
-# # table.children[1].children[1].children[0].text = "26"
-#
-# markdown_text = mistletoe.markdown(table, markdown_renderer.MarkdownRenderer)
-#
-# # Print the modified Markdown text
-# print(markdown_text)
-
+# Sample data
 
 """
 SHIFT | s
