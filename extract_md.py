@@ -12,7 +12,7 @@ import io
 
 # A table header label indicating its cells should be extracted. Must be the first column.
 HEADER_TRIGGER_KEY = "Button".lower()
-BUTTON_PATTERN_DELIMITER = "|"
+BUTTON_PATTERN_DELIMITER = "="
 
 # TODO
 # Keep line-number of finding
@@ -56,28 +56,28 @@ class ExtractButtonsFromMarkdown:
         and their canonical names.
         Patterns use regular expressions.
         Case-insensitive, specially handled elsewhere by code.
-        Pipe (|) separates the word and its value. See BUTTON_PATTERN_DELIMITER.
+        Equals (=) separates the word and its value. See BUTTON_PATTERN_DELIMITER.
         """
         pattern_to_canonical_button_name = """
-^SHIFT$ | s
-^[B]?(utton)?[ ]?1$ | 1
-^[B]?(utton)?[ ]?2$ | 2
-^[B]?(utton)?[ ]?3$ | 3
-^[B]?(utton)?[ ]?4$ | 4
-^[B]?(utton)?[ ]?5$ | 5
-^[B]?(utton)?[ ]?6$ | 6
-^[B]?(utton)?[ ]?7$ | 7
-^(turn)?[ ]?dial$ | dial
-^NO$ | n
-^OK$ | o
-^LOOPER PLAY$ | lplay
-^LOOPER REC$ | lr
-^REC$ | lr
-^LOOPER STOP$ | ls
-^MODE PLAY$ | mplay
-^PARAM$ | param
-^SYSTEM$ | sys
-^SEQ PLAY$ | splay
+^SHIFT$ = s
+^[B]?(utton)?[ ]?1$ = 1
+^[B]?(utton)?[ ]?2$ = 2
+^[B]?(utton)?[ ]?3$ = 3
+^[B]?(utton)?[ ]?4$ = 4
+^[B]?(utton)?[ ]?5$ = 5
+^[B]?(utton)?[ ]?6$ = 6
+^[B]?(utton)?[ ]?7$ = 7
+^(turn)?[ ]?dial$ = dial
+^NO$ = n
+^OK$ = o
+^LOOPER PLAY$ = lplay
+^LOOPER REC$ = lr
+^REC$ = lr
+^LOOPER STOP$ = ls
+^MODE PLAY$ = mplay
+^PARAM$ = param
+^SYSTEM$ = sys
+^SEQ PLAY$ = splay
 """
         return self.load_constants_from_csv(pattern_to_canonical_button_name)
 
