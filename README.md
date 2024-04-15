@@ -22,7 +22,7 @@ Updating the images and the Markdown is work which is worthy of automation.
 
 * Extract sequences of names of button controls from formatted Markdown tables
 * Generate images by compositing a set of layers of a diagram based upon the button control sequence's names 
-* Update the original Markdown with generated images
+* **FUTURE**: _Update the original Markdown with generated images_
 * Customize: button patterns
 
 **Before**
@@ -51,7 +51,7 @@ Updating the images and the Markdown is work which is worthy of automation.
 * Tables **MUST** have a first column header name of "`Button`". Non-matching tables will be ignored.
 * Each first-column cell's contents **MUST** be formatted according to the following. Non-matching cells will be ignored. `Button sequence string` `<br>` `![](optional-link-to-image)` - see an [example](#Example) below.
   * Note that the `<br>` tag is required. 
-  * Note also that the image link is optional. It will be added automatically when there is a properly formatted button sequence and `<br>` tag.
+  * Note also that the image link is optional. **FUTURE:** _It will be added automatically when there is a properly formatted button sequence and `<br>` tag._
 * Group names of controls in a **button sequence string**, a formatted sequence. E.g. "SHIFT + B1".
   * Internally, the **button sequence string** is parsed to individual button names, e.g. "SHIFT" and "B1"
   * The individual button names are used to extract layers. Then a final image is composited from those layers.
@@ -91,7 +91,7 @@ A [default button pattern file](qunmk2_button_patterns.txt) is provided for the 
 Markdown showing a supported table and cells. Illustrates:
 
 1. Supported cell pattern, already populated with an image path. Image will be generated.
-2. Supported cell pattern, and needing an image. Image will be generated, and cell contents will be updated with image link after br-tag. 
+2. Supported cell pattern, and needing an image. Image will be generated. **FUTURE**: _Cell contents will be updated with image link after br-tag._ 
 3. Cell pattern not supported. Has no br-tag. No image will be generated, and no cell modifications will be made. 
 
 ```markdown
