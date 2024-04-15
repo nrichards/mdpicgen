@@ -25,6 +25,11 @@ class PSDInMd:
     psd = None
 
     def can_find_layer_for_any_shortname(self, layer, match_components) -> bool:
+        """
+        Breaks shortnames into small chunks, "components".
+        Searches the PSD structure to determine if the current layer should be composited: when it matches
+         one of the components.
+        """
         print(f'inspecting \"{layer.name}\"', file=sys.stderr)
 
         # Optimization: collect the shortname which this layer represents.
@@ -37,7 +42,7 @@ class PSDInMd:
         if layer.parent and layer.parent.name:
             layer_parent_component_name = layer.parent.name.split('-')[-1].strip()
 
-        # Search through the PSD for a
+        # Search through the PSD for the appropriate layer that matches any of component we're interested in
         if layer.name:
             if layer_component_name in match_components:
                 print(f'matched {layer_component_name}, {layer.bbox}', file=sys.stderr)
@@ -65,6 +70,13 @@ class PSDInMd:
             bbox = self.psd.bbox
 
     def process_psd(self, out_dirname, psd_filename, basenames, height):
+        """
+        Writes image files named using the basenames and placed in the out_dirname.
+        Images are composited from the PSD file according to substrings of the basenames, called "components".
+        PSD has named layers, and the basenames are formatted to reference the layer names.
+        Break the basenames apart (into "components") then search for matching layers, then composite that all into an
+        image.
+        """
         make_out_dir(out_dirname)
 
         self.psd = PSDImage.open(psd_filename)

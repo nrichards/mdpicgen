@@ -24,6 +24,10 @@ class FormatMarkdown:
                 self.formatted = renderer.render(document)
 
 
+##
+## WORK IN PROGRESS, DO NOT USE
+##
+
 class ChangeMarkdown:
     """
     Expands tables with appropriate whitespace

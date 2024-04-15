@@ -221,18 +221,20 @@ class ExtractButtonsFromMarkdown:
         poisoned = False
         patterns = self.button_patterns.keys()
         short_names = list(self.button_patterns.values())
+
+        # Check each button in the sequence of controls
         for element in sequence:
             # constrain overall result to element's presence in recognized patterns
             match_results = list(map(lambda pattern: pattern.search(element), patterns))
 
-            # count matches (non-None)
+            # Keep a found button sequence if it matches an expected button pattern.
+            # Count matches (non-None) to ensure this is a valid button.
             match_count = len(match_results) - Counter(match_results)[None]
 
             if match_count > 0:
                 if match_count > 1:
                     print(f"error: unexpected multiple-match count of {match_count} for element, \"{element}\"",
                           file=sys.stderr)
-                # filtered = filtered + [element]
                 match_index = self.find_first_non_null_index(match_results)
                 short_name = short_names[match_index]
                 filtered = filtered + [{element: short_name}]
@@ -240,13 +242,15 @@ class ExtractButtonsFromMarkdown:
                 print(f"could not find \"{element}\". Poisoning \"{sequence}\"", file=sys.stderr)
                 self.could_not_find = self.could_not_find + [element]
                 poisoned = True
+
+        # Discard the sequence if one or more of the documented buttons does not match the list of valid button
+        # patterns.
         if poisoned:
             sequence = []
         else:
             sequence = filtered
 
         result = sequence
-
         return result
 
     def find_first_non_null_index(self, a_list):
