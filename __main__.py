@@ -29,7 +29,8 @@ if __name__ == '__main__':
 
     extracted_buttons = extract_buttons(args.md_file, args.button_pattern_file)
     if args.print_extract:
-        print(extracted_buttons)
+        for extract in extracted_buttons:
+            print(extract)
         print(f"found: {len(extracted_buttons)}", file=sys.stderr)
 
     if args.psd_file:
