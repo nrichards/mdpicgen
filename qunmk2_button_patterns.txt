@@ -1,22 +1,28 @@
-# Each line: <RegEx to match buttons, as written in Markdown>, <Shortened name used to build image filenames>
-# Uses equals sign (=) instead of comma (,) for this CSV to avoid collisions inside the RegEx
-# TODO: Add Separator "+" and " or "
+# Each line: button rule or separator rule
+# Button rule:
+#   FORMAT: RegEx to match buttons, as written in Markdown = Shortened name used to build image filenames>
+# Separator rule:
+#   FORMAT: __separator__ = "+"
+#   Each with key "__separator__", and value as quoted string, to help break-down a long sequence
+__separator__ = "+"
+__separator__ = " or "
+__separator__ = " / "
 ^SHIFT$ = s
-^[B]?(utton)?[ ]?1( \\(Long press\\))?$ = 1
-^[B]?(utton)?[ ]?2( \\(Long press\\))?$ = 2
-^[B]?(utton)?[ ]?3( \\(Long press\\))?$ = 3
-^[B]?(utton)?[ ]?4( \\(Long press\\))?$ = 4
-^[B]?(utton)?[ ]?5( \\(Long press\\))?$ = 5
-^[B]?(utton)?[ ]?6( \\(Long press\\))?$ = 6
-^[B]?(utton)?[ ]?7( \\(Long press\\))?$ = 7
-^[B]?(utton)?[ ]?8( \\(Long press\\))?$ = 8
+^[B]?(utton)?[ ]?1( \(Long press\))?$ = 1
+^[B]?(utton)?[ ]?2( \(Long press\))?$ = 2
+^[B]?(utton)?[ ]?3( \(Long press\))?$ = 3
+^[B]?(utton)?[ ]?4( \(Long press\))?$ = 4
+^[B]?(utton)?[ ]?5( \(Long press\))?$ = 5
+^[B]?(utton)?[ ]?6( \(Long press\))?$ = 6
+^[B]?(utton)?[ ]?7( \(Long press\))?$ = 7
+^[B]?(utton)?[ ]?8( \(Long press\))?$ = 8
 ^(turn)?[ ]?dial$ = dial
 ^NO$ = n
 ^OK$ = o
 ^LOOPER PLAY$ = lplay
-^(LOOPER )?REC$ = lr
+^(LOOPER )?REC( \(Long press\))?$ = lr
 ^LOOPER STOP$ = ls
-^MODE PLAY( \\(RECALL\\))?$ = mplay
-^PARAM$ = param
+^MODE PLAY( \(RECALL\))?$ = mplay
+^PARAM( \(Long press\))$ = param
 ^SYSTEM$ = sys
 ^SEQ PLAY$ = splay

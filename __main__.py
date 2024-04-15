@@ -1,4 +1,5 @@
 from psd_in_md import format_markdown, process_psd, extract_buttons
+import sys
 
 if __name__ == '__main__':
     import argparse
@@ -29,13 +30,13 @@ if __name__ == '__main__':
     extracted_buttons = extract_buttons(args.md_file, args.button_pattern_file)
     if args.print_extract:
         print(extracted_buttons)
-        print(f"found: {len(extracted_buttons)}")
+        print(f"found: {len(extracted_buttons)}", file=sys.stderr)
 
     if args.psd_file:
         try:
             process_psd(args.psd_out_dir, args.md_file, args.psd_file)
         except Exception as e:
-            print(f"Error processing PSD file: {e}")
+            print(f"Error processing PSD file: {e}", file=sys.stderr)
             exit(1)
 
     formatted_text = format_markdown(args.md_file)

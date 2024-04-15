@@ -1,21 +1,25 @@
 import csv
 import io
 import re
+import sys
 from collections import Counter
 from pathlib import Path
 
 import mistletoe
-import sys
 from mistletoe.block_token import Table
 from mistletoe.markdown_renderer import MarkdownRenderer
 from mistletoe.span_token import RawText, HtmlSpan
 
-SEPARATOR_OR = " or "
-SEPARATOR_PLUS = "+"
+# For reading the pattern text file
+PATTERN_FILE_DELIMETER = "="
+
+SEPARATOR_KEY = "__separator__"
+SEPARATOR_VALUE_WRAPPER = "\""
+COMMENT_KEY = "#"
 
 # A table header label indicating its cells should be extracted. Must be the first column.
 HEADER_TRIGGER_KEY = "Button".lower()
-BUTTON_PATTERN_DELIMITER = "="
+
 
 # TODO
 # Keep line-number of finding
@@ -31,7 +35,7 @@ BUTTON_PATTERN_DELIMITER = "="
 
 def extract_buttons(md_file, but_pat_file):
     extractor = ExtractButtonsFromMarkdown(md_file, but_pat_file)
-    print(f"rejected: {len(extractor.could_not_find)}")
+    print(f"rejected: {len(extractor.could_not_find)}", file=sys.stderr)
     return extractor.buttons
 
 
@@ -47,7 +51,7 @@ class ExtractButtonsFromMarkdown:
 
     def __init__(self, markdown_filename, button_pattern_file):
         self.button_patterns = self.patterns_map_to_button_name(button_pattern_file)
-        self.separators = [SEPARATOR_PLUS, SEPARATOR_OR]
+        self.separators = self.patterns_to_separators(button_pattern_file)
 
         with open(markdown_filename, "r") as fin:
             with MarkdownRenderer(normalize_whitespace=True) as renderer:
@@ -69,27 +73,37 @@ class ExtractButtonsFromMarkdown:
 
         return self.load_constants_from_csv(pattern_to_canonical_button_name)
 
-    def load_constants_from_csv(self, csv_data: str, delimiter=BUTTON_PATTERN_DELIMITER) -> {re.Pattern, str}:
+    def patterns_to_separators(self, button_pattern_file):
+        button_pattern_data = Path(button_pattern_file).read_text()
+        return self.load_separators_from_csv(button_pattern_data)
+
+    def load_constants_from_csv(self, button_pattern_file: str, delimiter=PATTERN_FILE_DELIMETER) -> {re.Pattern,
+                                                                                                      str}:
         """
         Return a dict of regular expressions and their equivalent string identifiers.
 
         To be used to match button names to short-form, well-known button identifiers.
         """
         constants = {}
-        for row in csv.reader(io.StringIO(csv_data), delimiter=delimiter):
+        for row in csv.reader(io.StringIO(button_pattern_file), delimiter=delimiter):
             if not row:
                 continue
-            if row[0].startswith("# "):
+            if row[0].startswith(COMMENT_KEY) or row[0].startswith(SEPARATOR_KEY):
                 continue
 
             key, value = row
             ks = key.strip()
             kre = re.compile(ks, re.IGNORECASE)
             constants[kre] = value.strip()
-            # except ValueError as e:
-            #     print(f"warning: ignoring pattern: {row}", file=sys.stderr)
-            #     continue
         return constants
+
+    def load_separators_from_csv(self, button_pattern_file, delimiter=PATTERN_FILE_DELIMETER):
+        result = []
+        for row in csv.reader(io.StringIO(button_pattern_file), delimiter=delimiter):
+            if row and row[0].startswith(SEPARATOR_KEY):
+                key, value = row
+                result = result + [value.strip().strip(SEPARATOR_VALUE_WRAPPER)]
+        return result
 
     def extract_document(self, doc) -> [[str]]:
         result = []
@@ -103,7 +117,7 @@ class ExtractButtonsFromMarkdown:
         if self.is_button_table(table):
             for element in table.children:
                 extract = self.extract_tablerow(element)
-                
+
                 # wrap subarray
                 if extract:
                     result = result + [extract]
@@ -180,7 +194,7 @@ class ExtractButtonsFromMarkdown:
             if match_count > 0:
                 filtered = filtered + [element]
             else:
-                print(f"could not find \"{element}\". Poisoning \"{sequence}\"")
+                print(f"could not find \"{element}\". Poisoning \"{sequence}\"", file=sys.stderr)
                 self.could_not_find = self.could_not_find + [element]
                 poisoned = True
         if poisoned:
