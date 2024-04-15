@@ -10,6 +10,9 @@ from mistletoe.block_token import Table
 from mistletoe.markdown_renderer import MarkdownRenderer
 from mistletoe.span_token import RawText, HtmlSpan
 
+# For generating image filenames, the separator between alphanumeric chars, e.g. "s_mplay_123"
+SHORT_NAME_INFIX_SEPARATOR = "_"
+
 # For reading the pattern text file
 PATTERN_FILE_DELIMETER = "="
 
@@ -18,7 +21,7 @@ SEPARATOR_VALUE_WRAPPER = "\""
 COMMENT_KEY = "#"
 
 # A table header label indicating its cells should be extracted. Must be the first column.
-HEADER_TRIGGER_KEY = "Button".lower()
+HEADER_TRIGGER_KEY = "Button"
 
 
 # TODO
@@ -30,22 +33,46 @@ HEADER_TRIGGER_KEY = "Button".lower()
 # 0 = {RawText} <mistletoe.span_token.RawText content='SHIFT + MODE PLAY ' at 0x1053bd490>
 # 1 = {HtmlSpan} <mistletoe.span_token.HtmlSpan content='<br>' at 0x1053bd4d0>
 # 2 = {RawText} <mistletoe.span_token.RawText content=' ' at 0x1053bd550>
-# 3 = {Image} <mistletoe.span_token.Image with 0 children src='./manual_images/but/s_mplay.pn'...+1 title='' at 0x1053bd590>
+# 3 = {Image} <mistletoe.span_token.Image with 0 children src='./manual_images/but/s_mplay.pn'...+1 title='' ...
 
 
 def extract_buttons(md_file, but_pat_file):
+    """
+    Extract button command sequences from Markdown following a set of patterns
+
+    :param md_file: Markdown file formatted with well-known button sequences in special tables
+    :param but_pat_file: Text file mapping regular expressions to buttons, and defining separator patterns
+    :return: List of dictionaries mapping recognized button names, as written in the input Markdown, to short names
+    which are used as components of basenames of generated image files illustrating the button sequence
+    """
     extractor = ExtractButtonsFromMarkdown(md_file, but_pat_file)
     print(f"rejected: {len(extractor.could_not_find)}", file=sys.stderr)
     return extractor.buttons
+
+
+def format_image_basename(button_sequence):
+    """
+    Example:
+        Input: [{'MODE PLAY (RECALL)': 'mplay'}, {'B[1-8]': '12345678'}, {'turn dial': 'dial'}]
+        Output: 'mplay_12345678_d'
+    """
+    result = ""
+    for bmap in button_sequence:
+        if len(result):
+            result = result + SHORT_NAME_INFIX_SEPARATOR
+
+        key, value = list(bmap.items())[0]
+        result = result + value
+    return result
 
 
 class ExtractButtonsFromMarkdown:
     """
     Extracts button command sequences from tables in Markdown.
     """
-    buttons: [[str]] = []  # [ [ "SHIFT", "B1"], [ "SEQ PLAY" ] ] -- for example
+    buttons: [[]] = []  # [{'SHIFT': 's'}, {'SEQ PLAY': 'splay'}, {'turn dial': 'd'}] -- for example
 
-    require_br_tag = True  # "SHIFT + B1 <br> ..." -- default constraint
+    require_br_tag = True  # "SHIFT + SEQ PLAY + turn dial <br> ..." -- default constraint
 
     could_not_find = []
 
@@ -77,8 +104,8 @@ class ExtractButtonsFromMarkdown:
         button_pattern_data = Path(button_pattern_file).read_text()
         return self.load_separators_from_csv(button_pattern_data)
 
-    def load_constants_from_csv(self, button_pattern_file: str, delimiter=PATTERN_FILE_DELIMETER) -> {re.Pattern,
-                                                                                                      str}:
+    def load_constants_from_csv(self, button_pattern_file: str, delimiter=PATTERN_FILE_DELIMETER) -> \
+            {re.Pattern, str}:
         """
         Return a dict of regular expressions and their equivalent string identifiers.
 
@@ -105,14 +132,14 @@ class ExtractButtonsFromMarkdown:
                 result = result + [value.strip().strip(SEPARATOR_VALUE_WRAPPER)]
         return result
 
-    def extract_document(self, doc) -> [[str]]:
+    def extract_document(self, doc) -> [[]]:
         result = []
         for token in doc.children:
             if type(token) is Table:
                 result = result + self.extract_table(token)
         return result
 
-    def extract_table(self, table: mistletoe.block_token.Table) -> [[str]]:
+    def extract_table(self, table: mistletoe.block_token.Table) -> [[]]:
         result = []
         if self.is_button_table(table):
             for element in table.children:
@@ -126,7 +153,7 @@ class ExtractButtonsFromMarkdown:
     def is_button_table(self, table) -> bool:
         label = table.header.children[0].children[0]
         if type(label) is RawText:
-            if label.content.lower().startswith(HEADER_TRIGGER_KEY):
+            if label.content.lower().startswith(HEADER_TRIGGER_KEY.lower()):
                 return True
         return False
 
@@ -161,11 +188,8 @@ class ExtractButtonsFromMarkdown:
         "SHIFT + B1 (Long press)" => "SHIFT", "B1"
         "SHIFT + B1 or B2" => "SHIFT", "B1", "B2"
         "LEGENDARY" => []
-        TODO: "B[1-8]" => "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8" 
-        TODO: "B[1-3,5]" => "B1", "B2", "B3", "B5"
-         
-        :param text: 
-        :return: 
+        "B[1-8]" => "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8"
+        "B[1-3,5]" => "B1", "B2", "B3", "B5"
         """
         sequence = [text]
 
@@ -183,16 +207,22 @@ class ExtractButtonsFromMarkdown:
         filtered = []
         poisoned = False
         patterns = self.button_patterns.keys()
+        short_names = list(self.button_patterns.values())
         for element in sequence:
             # constrain overall result to element's presence in recognized patterns
-            # print(f"checking \"{element}\" ...")
             match_results = list(map(lambda pattern: pattern.search(element), patterns))
 
             # count matches (non-None)
             match_count = len(match_results) - Counter(match_results)[None]
 
             if match_count > 0:
-                filtered = filtered + [element]
+                if match_count > 1:
+                    print(f"error: unexpected multiple-match count of {match_count} for element, \"{element}\"",
+                          file=sys.stderr)
+                # filtered = filtered + [element]
+                match_index = self.find_first_non_null_index(match_results)
+                short_name = short_names[match_index]
+                filtered = filtered + [{element: short_name}]
             else:
                 print(f"could not find \"{element}\". Poisoning \"{sequence}\"", file=sys.stderr)
                 self.could_not_find = self.could_not_find + [element]
@@ -205,3 +235,6 @@ class ExtractButtonsFromMarkdown:
         result = sequence
 
         return result
+
+    def find_first_non_null_index(self, a_list):
+        return next((i for i, x in enumerate(a_list) if x is not None), -1)
