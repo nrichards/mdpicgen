@@ -28,12 +28,15 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    # Extract from Markdown
     extracted_buttons = extract_buttons(args.md_file, args.button_pattern_file)
     extracted_basenames = []
+    for extract in extracted_buttons:
+        image_basename = format_image_basename(extract)
+        extracted_basenames = extracted_basenames + [image_basename]
+
     if args.print_extract:
-        for extract in extracted_buttons:
-            image_basename = format_image_basename(extract)
-            extracted_basenames = extracted_basenames + [image_basename]
+        for (extract, image_basename) in zip(extracted_buttons, extracted_basenames):
             print(f"{extract} => {image_basename}")
         print(f"found: {len(extracted_buttons)}", file=sys.stderr)
 
@@ -44,6 +47,6 @@ if __name__ == '__main__':
             print(f"Error processing PSD file: {e}", file=sys.stderr)
             exit(1)
 
-    formatted_text = format_markdown(args.md_file)
     if args.print_formatted:
+        formatted_text = format_markdown(args.md_file)
         print(formatted_text)

@@ -3,7 +3,15 @@
 #   FORMAT: RegEx to match buttons, as written in Markdown = Shortened name used to build image filenames>
 # Separator rule:
 #   FORMAT: __separator__ = "+"
-#   Each with key "__separator__", and value as quoted string, to help break-down a long sequence
+#   One or more.
+#   A quoted string.
+#   To help break-down a long button sequence.
+# Header rule:
+#   FORMAT: __header__ = Button
+#   Exactly one.
+#   An unquoted string.
+#   To identify which tables to parse, by matching against a table's first column's header text contents.
+__header__ = Button
 __separator__ = "+"
 __separator__ = " or "
 __separator__ = " / "

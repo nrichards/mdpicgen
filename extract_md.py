@@ -5,8 +5,7 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-import mistletoe
-from mistletoe.block_token import Table
+from mistletoe.block_token import Table, TableRow, Document
 from mistletoe.markdown_renderer import MarkdownRenderer
 from mistletoe.span_token import RawText, HtmlSpan
 
@@ -15,13 +14,10 @@ SHORT_NAME_INFIX_SEPARATOR = "_"
 
 # For reading the pattern text file
 PATTERN_FILE_DELIMETER = "="
-
+TABLE_HEADER_KEY = "__header__"
 SEPARATOR_KEY = "__separator__"
 SEPARATOR_VALUE_WRAPPER = "\""
 COMMENT_KEY = "#"
-
-# A table header label indicating its cells should be extracted. Must be the first column.
-HEADER_TRIGGER_KEY = "Button"
 
 
 # TODO
@@ -36,7 +32,7 @@ HEADER_TRIGGER_KEY = "Button"
 # 3 = {Image} <mistletoe.span_token.Image with 0 children src='./manual_images/but/s_mplay.pn'...+1 title='' ...
 
 
-def extract_buttons(md_file, but_pat_file):
+def extract_buttons(md_file, but_pat_file) -> [[]]:
     """
     Extract button command sequences from Markdown following a set of patterns
 
@@ -50,7 +46,7 @@ def extract_buttons(md_file, but_pat_file):
     return extractor.buttons
 
 
-def format_image_basename(button_sequence):
+def format_image_basename(button_sequence) -> str:
     """
     Creates a basename suitable for representing a button sequence.
 
@@ -92,10 +88,11 @@ class ExtractButtonsFromMarkdown:
     def __init__(self, markdown_filename, button_pattern_file):
         self.button_patterns = self.patterns_map_to_button_name(button_pattern_file)
         self.separators = self.patterns_to_separators(button_pattern_file)
+        self.header = self.patterns_to_header(button_pattern_file)
 
         with open(markdown_filename, "r") as fin:
             with MarkdownRenderer(normalize_whitespace=True) as renderer:
-                document = mistletoe.Document(fin)
+                document = Document(fin)
 
                 # Extract buttons, following constraints and patterns, and store results
                 result = self.extract_document(document)
@@ -115,7 +112,13 @@ class ExtractButtonsFromMarkdown:
 
     def patterns_to_separators(self, button_pattern_file):
         button_pattern_data = Path(button_pattern_file).read_text()
-        return self.load_separators_from_csv(button_pattern_data)
+        return self.load_values_from_csv(button_pattern_data, SEPARATOR_KEY)
+
+    def patterns_to_header(self, button_pattern_file):
+        button_pattern_data = Path(button_pattern_file).read_text()
+        values = self.load_values_from_csv(button_pattern_data, TABLE_HEADER_KEY)
+        result = values[0].strip()
+        return result
 
     def load_constants_from_csv(self, button_pattern_file: str, delimiter=PATTERN_FILE_DELIMETER) -> \
             {re.Pattern, str}:
@@ -128,7 +131,8 @@ class ExtractButtonsFromMarkdown:
         for row in csv.reader(io.StringIO(button_pattern_file), delimiter=delimiter):
             if not row:
                 continue
-            if row[0].startswith(COMMENT_KEY) or row[0].startswith(SEPARATOR_KEY):
+            if (row[0].startswith(COMMENT_KEY) or row[0].startswith(SEPARATOR_KEY) or
+                    row[0].startswith(TABLE_HEADER_KEY)):
                 continue
 
             key, value = row
@@ -137,11 +141,11 @@ class ExtractButtonsFromMarkdown:
             constants[kre] = value.strip()
         return constants
 
-    def load_separators_from_csv(self, button_pattern_file, delimiter=PATTERN_FILE_DELIMETER):
+    def load_values_from_csv(self, button_pattern_file, find_key, delimiter=PATTERN_FILE_DELIMETER):
         result = []
         for row in csv.reader(io.StringIO(button_pattern_file), delimiter=delimiter):
-            if row and row[0].startswith(SEPARATOR_KEY):
-                key, value = row
+            if row and row[0].startswith(find_key):
+                _, value = row
                 result = result + [value.strip().strip(SEPARATOR_VALUE_WRAPPER)]
         return result
 
@@ -152,7 +156,7 @@ class ExtractButtonsFromMarkdown:
                 result = result + self.extract_table(token)
         return result
 
-    def extract_table(self, table: mistletoe.block_token.Table) -> [[]]:
+    def extract_table(self, table: Table) -> [[]]:
         result = []
         if self.is_button_table(table):
             for element in table.children:
@@ -166,11 +170,11 @@ class ExtractButtonsFromMarkdown:
     def is_button_table(self, table) -> bool:
         label = table.header.children[0].children[0]
         if type(label) is RawText:
-            if label.content.lower().startswith(HEADER_TRIGGER_KEY.lower()):
+            if label.content.lower().startswith(self.header.lower()):
                 return True
         return False
 
-    def extract_tablerow(self, tablerow: mistletoe.block_token.TableRow) -> [str]:
+    def extract_tablerow(self, tablerow: TableRow) -> [str]:
         result = []
         button_sequence = []
 
