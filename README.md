@@ -6,7 +6,7 @@ Automates maintenance of Markdown files. Generates and inserts images into a spe
 
 ## Usage
 
-> `psd-in-md [-h] [--button-pattern-file BUTTON_PATTERN_FILE] [--psd-file PSD_FILE] [--psd-out-dir PSD_OUT_DIR] [--print-formatted] [--print-extract] md_file`
+> `usage: psd-in-md [-h] [--button-pattern-file BUTTON_PATTERN_FILE] [--psd-file PSD_FILE] [--psd-out-dir PSD_OUT_DIR] [--image-height IMAGE_HEIGHT] [--print-formatted] [--print-extract] md_file`
 
 More documentation is available with `psd-in-md -h`.
 
@@ -56,7 +56,11 @@ Updating the images and the Markdown is work which is worthy of automation.
   * Internally, the **button sequence string** is parsed to individual button names, e.g. "SHIFT" and "B1"
   * The individual button names are used to extract layers. Then a final image is composited from those layers.
 * Button names may differ from the names used for the diagram layers. A mapping between the user-facing formatted sequence naming and the layers is implemented.
-* Images are sized down to fit in tables
+* Images are sized down to fit in tables. Use the `--image-height` parameter to customize the height.
+* PSD file must have a layer titled, `"BG"`. This will be composited behind all other layers during image generation.
+* PSD file layer names must include short-names. These short-names must be located after a hyphen (-) in the layer name.
+  * E.g. the `"s"` in the layer name, `"SHIFT - s"`
+  * See also the [image name discussion](#generated-image-names).
 
 ## Generated image names
 

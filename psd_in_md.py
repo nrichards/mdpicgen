@@ -1,17 +1,14 @@
 from psd_tools import PSDImage
 import os
+import sys
 
+# noinspection PyUnresolvedReferences
 from modify_md import format_markdown
-from extract_md import extract_buttons, format_image_basename
+# noinspection PyUnresolvedReferences
+from extract_md import extract_buttons, format_image_basename, SHORT_NAME_INFIX_SEPARATOR
 
 # Renders images sized to the bounding box of this layer
 BG_LAYER_NAME: str = "BG"
-
-# Names of layers to extract
-# NOTE: Trailing words in the layers are used to compose the resultant filename
-layer_names: [str] = ['SHIFT - s', 'SEQ PLAY - splay', 'DIAL - d']
-
-full_layer_names: [str] = layer_names + [BG_LAYER_NAME]
 
 
 def make_out_dir(out_dirname):
@@ -19,57 +16,41 @@ def make_out_dir(out_dirname):
         os.mkdir(out_dirname)
 
 
-def process_psd(out_dirname, md_file, psd_filename):
-    PSDInMd().process_psd(out_dirname, md_file, psd_filename)
+def process_psd(out_dirname, psd_filename, basenames, height):
+    PSDInMd().process_psd(out_dirname, psd_filename, basenames, height)
 
 
 class PSDInMd:
     bbox = None
-
-    "BG"
-    "LOOPER STOP - ls"
-    "LOOPER PLAY - lplay"
-    "LOOPER REC - lr"
-    "PARAM - param"
-    "SYSTEM - sys"
-    "MODE PLAY - mplay"
-    "SEQ PLAY - splay"
-    "B8 - 8"
-    "B7 - 7"
-    "B6 - 6"
-    "B5 - 5"
-    "B4 - 4"
-    "B3 - 3"
-    "B2 - 2"
-    "B1 - 1"
-    "NO - n"
-    "OK - o"
-    "SHIFT - s"
-    "DIAL - d"
-
-    # out_dirname = 'out'
     psd = None
 
-    def layer_name_from_text(self, button_name):
-        # TODO build a dictionary mapping words used in the Qun manual to layer names
-        pass
+    def can_find_layer_for_any_shortname(self, layer, match_components) -> bool:
+        print(f'inspecting \"{layer.name}\"', file=sys.stderr)
 
-    def match_layer(self, layer, match_names):
-        print(f'inspecting \"{layer.name}\"')
+        # Optimization: collect the shortname which this layer represents.
+        # The PSD has been designed to have shortnames embedded in its layer names.
+        # They are located after a hyphen (-) in the layer name.
+        layer_component_name = None
         if layer.name:
-            if layer.name in match_names:
-                print(f'matched {layer.name}, {layer.bbox}')
+            layer_component_name = layer.name.split('-')[-1].strip()
+        layer_parent_component_name = None
+        if layer.parent and layer.parent.name:
+            layer_parent_component_name = layer.parent.name.split('-')[-1].strip()
+
+        # Search through the PSD for a
+        if layer.name:
+            if layer_component_name in match_components:
+                print(f'matched {layer_component_name}, {layer.bbox}', file=sys.stderr)
                 return True
-            elif layer.parent is not None and layer.parent.kind == 'group' and layer.parent.name in match_names:
+            elif layer.parent and layer.parent.kind == 'group' and layer_parent_component_name in match_components:
                 return True
-        elif layer.parent.kind == 'group' and layer.parent.name in match_names:
-            print(f'matched {layer.name}, {layer.bbox}')
+        elif layer.parent.kind == 'group' and layer_parent_component_name in match_components:
+            print(f'matched {layer_parent_component_name}, {layer.parent.bbox}', file=sys.stderr)
             return True
         else:
-            return self.match_layer(layer.parent, match_names)
-            # False
-        # elif match_layer(layer.parent, match_names):
-        #     return True
+            # TRICKY: Recursion
+            return self.can_find_layer_for_any_shortname(layer.parent, match_components)
+
         return False
 
     def find_bbox(self):
@@ -83,35 +64,39 @@ class PSDInMd:
             print(f"Warning: Bounding box layer {BG_LAYER_NAME} not found. Output images will be full size.")
             bbox = self.psd.bbox
 
-    def gen_image_name(self, names):
-        image_name = ''
-
-        for name in names:
-            words = name.split()
-            chunk = words[-1].strip()
-            print(f'chunk {chunk}')
-            if image_name != '':
-                image_name += "_"
-            image_name += chunk
-
-        return image_name
-
-    def process_psd(self, out_dirname, md_file, psd_filename):
+    def process_psd(self, out_dirname, psd_filename, basenames, height):
         make_out_dir(out_dirname)
 
         self.psd = PSDImage.open(psd_filename)
         self.find_bbox()
-        image = self.psd.composite(
-            viewport=bbox,
-            layer_filter=lambda candidate_layer: self.match_layer(candidate_layer, full_layer_names))
-        new_height = 48
-        reduction_scalar = new_height / image.size[1]
-        new_width = int(reduction_scalar * image.size[0])
-        resized_image = image.resize([new_width, new_height])
-        resized_image.save(f'{out_dirname}/{self.gen_image_name(layer_names)}.png')
 
-    # for layer in psd:
-    #     print(layer)
-    #     if layer.name != '':
-    #         layer_image = layer.composite()
-    #         layer_image.save('out/%s.png' % layer.name)
+        # Avoid redundant image generation. Uniquify the list of basenames.
+        unique_basenames = list(set(basenames))
+
+        for basename in unique_basenames:
+            # Prepare the component names to be matched with layers.
+            #  - Remove separators, and separate digits.
+            # E.g. 'lplay_12345' -> ['lplay', '1', '2', '3', '4', '5']
+            components = basename.split(SHORT_NAME_INFIX_SEPARATOR)
+
+            temp = []
+            for component in components:
+                if component.isdigit():
+                    temp = temp + [*component]
+                else:
+                    temp = temp + [component]
+            components = temp
+
+            # Always render the background layer.
+            components = components + [BG_LAYER_NAME]
+
+            image = self.psd.composite(
+                viewport=bbox,
+                layer_filter=lambda candidate_layer: self.can_find_layer_for_any_shortname(candidate_layer, components))
+
+            new_height = height
+            reduction_scalar = new_height / image.size[1]
+            new_width = int(reduction_scalar * image.size[0])
+            resized_image = image.resize([new_width, new_height])
+
+            resized_image.save(f'{out_dirname}/{basename}.png')

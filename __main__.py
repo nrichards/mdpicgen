@@ -21,6 +21,7 @@ if __name__ == '__main__':
     parser.add_argument("--psd-file", type=str, help="Input filename for the PSD file")
     parser.add_argument("--psd-out-dir", default='out', type=str,
                         help="Output directory name for composited images, will be created (Default: 'out')")
+    parser.add_argument("--image-height", default=48, type=int, help="Scale generated images to height")
 
     parser.add_argument("--print-formatted", action='store_true', help="Print formatted Markdown to stdout")
     parser.add_argument("--print-extract", action='store_true', help="Print extracted buttons to stdout")
@@ -28,15 +29,17 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     extracted_buttons = extract_buttons(args.md_file, args.button_pattern_file)
+    extracted_basenames = []
     if args.print_extract:
         for extract in extracted_buttons:
             image_basename = format_image_basename(extract)
+            extracted_basenames = extracted_basenames + [image_basename]
             print(f"{extract} => {image_basename}")
         print(f"found: {len(extracted_buttons)}", file=sys.stderr)
 
     if args.psd_file:
         try:
-            process_psd(args.psd_out_dir, args.md_file, args.psd_file)
+            process_psd(args.psd_out_dir, args.psd_file, extracted_basenames, args.image_height)
         except Exception as e:
             print(f"Error processing PSD file: {e}", file=sys.stderr)
             exit(1)
