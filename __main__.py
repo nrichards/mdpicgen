@@ -1,4 +1,4 @@
-from psd_in_md import format_markdown, process_psd, extract_buttons, format_image_basename
+from psd_in_md import format_markdown, process_psd, extract_button_sequences, format_image_basename, ButtonSequence
 import sys
 
 if __name__ == '__main__':
@@ -29,16 +29,19 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Extract from Markdown
-    extracted_buttons = extract_buttons(args.md_file, args.button_pattern_file)
+    button_sequences = extract_button_sequences(args.md_file, args.button_pattern_file)
+
+    # Compute image basenames
+    buttons = ButtonSequence.to_sequence_mapping_list(button_sequences)
     extracted_basenames = []
-    for extract in extracted_buttons:
+    for extract in buttons:
         image_basename = format_image_basename(extract)
         extracted_basenames = extracted_basenames + [image_basename]
 
     if args.print_extract:
-        for (extract, image_basename) in zip(extracted_buttons, extracted_basenames):
+        for (extract, image_basename) in zip(buttons, extracted_basenames):
             print(f"{extract} => {image_basename}")
-        print(f"found: {len(extracted_buttons)}", file=sys.stderr)
+        print(f"found: {len(buttons)}", file=sys.stderr)
 
     if args.psd_file:
         try:

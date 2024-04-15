@@ -5,7 +5,7 @@ import sys
 # noinspection PyUnresolvedReferences
 from modify_md import format_markdown
 # noinspection PyUnresolvedReferences
-from extract_md import extract_buttons, format_image_basename, SHORT_NAME_INFIX_SEPARATOR
+from extract_md import extract_button_sequences, format_image_basename, SHORT_NAME_INFIX_SEPARATOR, ButtonSequence
 
 # Renders images sized to the bounding box of this layer
 BG_LAYER_NAME: str = "BG"

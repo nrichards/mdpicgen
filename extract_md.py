@@ -4,6 +4,7 @@ import re
 import sys
 from collections import Counter
 from pathlib import Path
+from dataclasses import dataclass
 
 from mistletoe.block_token import Table, TableRow, Document
 from mistletoe.markdown_renderer import MarkdownRenderer
@@ -32,7 +33,7 @@ COMMENT_KEY = "#"
 # 3 = {Image} <mistletoe.span_token.Image with 0 children src='./manual_images/but/s_mplay.pn'...+1 title='' ...
 
 
-def extract_buttons(md_file, but_pat_file) -> [[]]:
+def extract_button_sequences(md_file, but_pat_file) -> [[]]:
     """
     Extract button command sequences from Markdown following a set of patterns
 
@@ -43,7 +44,7 @@ def extract_buttons(md_file, but_pat_file) -> [[]]:
     """
     extractor = ExtractButtonsFromMarkdown(md_file, but_pat_file)
     print(f"rejected: {len(extractor.could_not_find)}", file=sys.stderr)
-    return extractor.buttons
+    return extractor.button_sequences
 
 
 def format_image_basename(button_sequence) -> str:
@@ -75,15 +76,37 @@ def format_image_basename(button_sequence) -> str:
     return result
 
 
+@dataclass(frozen=True)
+class ButtonSequence:
+    sequence_mapping: [{}]
+    line_number: int
+
+    @staticmethod
+    def to_sequence_mapping_list(button_sequences: ["ButtonSequence"]):
+        """
+        Extracts a list of button sequence strings, mapping to shortnames, from an input list of ButtonSequences
+        """
+        if button_sequences and type(button_sequences[0]) is not ButtonSequence:
+            print(
+                f"error: can't transform extracted mapping to sequence list, unsupported type: {type(button_sequences[0])}")
+            return
+
+        result = [seq.sequence_mapping for seq in button_sequences]
+
+        return result
+
+
 class ExtractButtonsFromMarkdown:
     """
     Extracts button command sequences from tables in Markdown.
     """
+    # Output
     buttons: [[]] = []  # [{'SHIFT': 's'}, {'SEQ PLAY': 'splay'}, {'turn dial': 'd'}] -- for example
+    button_sequences: [ButtonSequence] = []  # Also contains line numbers
+    could_not_find = []  # Sequences not matched by the patterns
 
+    # Options
     require_br_tag = True  # "SHIFT + SEQ PLAY + turn dial <br> ..." -- default constraint
-
-    could_not_find = []
 
     def __init__(self, markdown_filename, button_pattern_file):
         self.button_patterns = self.patterns_map_to_button_name(button_pattern_file)
@@ -96,7 +119,8 @@ class ExtractButtonsFromMarkdown:
 
                 # Extract buttons, following constraints and patterns, and store results
                 result = self.extract_document(document)
-                self.buttons = result
+                self.button_sequences = result
+                self.buttons = ButtonSequence.to_sequence_mapping_list(self.button_sequences)
 
     def patterns_map_to_button_name(self, button_pattern_file) -> {str, str}:
         """
@@ -149,14 +173,14 @@ class ExtractButtonsFromMarkdown:
                 result = result + [value.strip().strip(SEPARATOR_VALUE_WRAPPER)]
         return result
 
-    def extract_document(self, doc) -> [[]]:
+    def extract_document(self, doc) -> [ButtonSequence]:
         result = []
         for token in doc.children:
             if type(token) is Table:
                 result = result + self.extract_table(token)
         return result
 
-    def extract_table(self, table: Table) -> [[]]:
+    def extract_table(self, table: Table) -> [ButtonSequence]:
         result = []
         if self.is_button_table(table):
             for element in table.children:
@@ -174,7 +198,7 @@ class ExtractButtonsFromMarkdown:
                 return True
         return False
 
-    def extract_tablerow(self, tablerow: TableRow) -> [str]:
+    def extract_tablerow(self, tablerow: TableRow) -> ButtonSequence:
         result = []
         button_sequence = []
 
@@ -191,7 +215,7 @@ class ExtractButtonsFromMarkdown:
                 self.require_br_tag and
                 len(cell.children) > 1 and
                 type(cell.children[1]) is HtmlSpan):
-            result = result + button_sequence
+            result = ButtonSequence(sequence_mapping=button_sequence, line_number=tablerow.line_number)
 
         return result
 
