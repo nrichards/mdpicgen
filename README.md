@@ -6,9 +6,41 @@ Automates maintenance of Markdown files. Generates and inserts images into a spe
 
 ## Usage
 
-> `usage: psd-in-md [-h] [--button-pattern-file BUTTON_PATTERN_FILE] [--psd-file PSD_FILE] [--psd-out-dir PSD_OUT_DIR] [--image-height IMAGE_HEIGHT] [--print-formatted] [--print-extract] md_file`
+```
+usage: psd-in-md [-h] [--button-pattern-file BUTTON_PATTERN_FILE]
+                 [--md-out-file MD_OUT_FILE] [--psd-file PSD_FILE]
+                 [--psd-out-dir PSD_OUT_DIR] [--image-height IMAGE_HEIGHT]
+                 [--print-formatted] [--print-extract]
+                 md_file
 
-More documentation is available with `psd-in-md -h`.
+Read Markdown and process PSD, generating images and inserting / updating into
+Markdown. PSD layer names will be used as keys. They will be matched to
+formatted key sequences [configurable] found in Markdown tables with first
+columns labelled "Button" [also configurable]. Layers will be composited into
+images according to the sequences and saved. Images will linked into Markdown
+in the second column, after the "Button" column. Markdown will be dumped to
+stdout.
+
+positional arguments:
+  md_file               Input filename for the Markdown file
+
+options:
+  -h, --help            show this help message and exit
+  --button-pattern-file BUTTON_PATTERN_FILE
+                        Pattern filename for matching buttons (Default:
+                        'qunmk2.patset')
+  --md-out-file MD_OUT_FILE
+                        Output filename for Input Markdown with updated image
+                        links
+  --psd-file PSD_FILE   Input filename for the PSD file
+  --psd-out-dir PSD_OUT_DIR
+                        Output directory name for composited images, will be
+                        created (Default: 'out')
+  --image-height IMAGE_HEIGHT
+                        Scale generated images to height (Default: 48)
+  --print-formatted     Print formatted Input Markdown to stdout
+  --print-extract       Print extracted buttons to stdout
+```
 
 ## Origin
 

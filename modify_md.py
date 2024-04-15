@@ -4,10 +4,17 @@ from mistletoe.block_token import BlockToken, Heading, Paragraph, SetextHeading
 from mistletoe.markdown_renderer import MarkdownRenderer
 from mistletoe.span_token import InlineCode, RawText, SpanToken
 
+from extract_md import ButtonSequence
+
 
 def format_markdown(markdown_filename):
     formatter = FormatMarkdown(markdown_filename)
     return formatter.formatted
+
+
+def write_markdown(md_out_file, md_in_file, button_sequences: [ButtonSequence]):
+    print("write_markdown ... yeah")
+    # TODO
 
 
 class FormatMarkdown:
