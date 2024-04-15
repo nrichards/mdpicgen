@@ -23,6 +23,6 @@ __separator__ = " / "
 ^(LOOPER )?REC( \(Long press\))?$ = lr
 ^LOOPER STOP$ = ls
 ^MODE PLAY( \(RECALL\))?$ = mplay
-^PARAM( \(Long press\))$ = param
+^PARAM( \(Long press\))?$ = param
 ^SYSTEM$ = sys
 ^SEQ PLAY$ = splay
