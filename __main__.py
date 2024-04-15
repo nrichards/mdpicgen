@@ -16,7 +16,7 @@ if __name__ == '__main__':
 
     parser.add_argument("md_file", type=str, help="Input filename for the Markdown file")
     parser.add_argument("--button-pattern-file", type=str, help="Pattern filename for matching buttons",
-                        default="qunmk2_button_patterns.txt")
+                        default="qunmk2.patset")
 
     parser.add_argument("--psd-file", type=str, help="Input filename for the PSD file")
     parser.add_argument("--psd-out-dir", default='out', type=str,

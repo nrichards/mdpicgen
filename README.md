@@ -41,9 +41,9 @@ Updating the images and the Markdown is work which is worthy of automation.
 
 **Workflow**
 
-1. Add table with `"Button"` header text in first column of a Markdown
-2. Add button command sequence text to a cell in that column
-3. Add a `<br>` tag at end of that text
+1. Add a table with `"Button"` header text as the first column of a Markdown source document
+2. Add button command sequence text to a cell in that table's `"Button"` column
+3. Add a `<br>` tag at end of that text to mark this button sequence for processing
 4. Run the tool
 
 ## Details
@@ -73,22 +73,22 @@ Images are named according to their button sequence, with shortened button names
 
 ## Button pattern file
 
-Button pattern files are used to define the matching pattern and the corresponding button's shortened name. 
+Button pattern files (`*.patset`) are used to define the matching pattern and the corresponding button's shortened name. 
 
-The files are formatted:
+The files are similar to CSV's. They are formatted and line-oriented:
 
-* having keys and values separated by an equals (=)
-  * `[B]?1 = 1`
-* using regular expressions for the keys
-  * `^[B]?1$` matches "B1" and "1"
-* supporting optional hash-tag (#) comment lines
-  * `# this is a comment`
+| Format                | Description                                                                                                                                                                                                                                                                                                                                      |
+|-----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `^[B]?1$ = 1`         | Button patterns.<br><br>**FORMAT**: [RegEx to match buttons, as written in Markdown] = [Shortened name used to build image filenames]<br>Keys and values separated by an equals (=). <br>Keys are [regular expressions](https://docs.python.org/3/library/re.html). <br>Values are short strings used for [image names](#generated-image-names). |
+| `# this is a comment` | (Optional) hash-tag (#) comment lines                                                                                                                                                                                                                                                                                                            |
+| `__header__`          | An unquoted string, used to identify which tables to parse by matching against a table's first column's header text contents.                                                                                                                                                                                                                    |
+| `__separator__`       | One or more quoted strings. Used help break-down, to split up a long button sequence into individual buttons. These individual buttons are then matched against the button patterns, above.                                                                                                                                                      |
 
-A [default button pattern file](qunmk2_button_patterns.txt) is provided for the Qun mk2 synthesizer.
+A [default button pattern file](qunmk2.patset) is provided for the Qun mk2 synthesizer.
 
 # Examples
 
-Markdown showing a supported table and cells. Illustrates:
+Markdown source document showing a supported table and cells. Illustrates:
 
 1. Supported cell pattern, already populated with an image path. Image will be generated.
 2. Supported cell pattern, and needing an image. Image will be generated. **FUTURE**: _Cell contents will be updated with image link after br-tag._ 
@@ -117,7 +117,7 @@ Shows button sequences extracted from Markdown file:
 
 Shows extracted button sequences, and uses a custom button pattern file:
 
-* `python3 __main__.py test.md --print-extract --button-pattern-file my_button_patterns.txt`
+* `python3 __main__.py test.md --print-extract --button-pattern-file custom.patset`
 
 Shows formatted Markdown file:
 

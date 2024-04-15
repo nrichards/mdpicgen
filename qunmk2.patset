@@ -10,7 +10,7 @@
 #   FORMAT: __header__ = Button
 #   Exactly one.
 #   An unquoted string.
-#   To identify which tables to parse, by matching against a table's first column's header text contents.
+#   To identify which tables to parse by matching against a table's first column's header text contents.
 __header__ = Button
 __separator__ = "+"
 __separator__ = " or "

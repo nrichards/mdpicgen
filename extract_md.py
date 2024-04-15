@@ -16,7 +16,7 @@ SHORT_NAME_INFIX_SEPARATOR = "_"
 PATTERN_FILE_DELIMETER = "="
 TABLE_HEADER_KEY = "__header__"
 SEPARATOR_KEY = "__separator__"
-SEPARATOR_VALUE_WRAPPER = "\""
+SEPARATOR_VALUE_WRAPPER = "\""  # just a quote, for later stripping of the quoted string values
 COMMENT_KEY = "#"
 
 
