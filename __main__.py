@@ -14,6 +14,8 @@ if __name__ == '__main__':
                     ''')
 
     parser.add_argument("md_file", type=str, help="Input filename for the Markdown file")
+    parser.add_argument("--button-pattern-file", type=str, help="Pattern filename for matching buttons",
+                        default="qunmk2_button_patterns.txt")
 
     parser.add_argument("--psd-file", type=str, help="Input filename for the PSD file")
     parser.add_argument("--psd-out-dir", default='out', type=str,
@@ -24,9 +26,10 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    extracted_buttons = extract_buttons(args.md_file)
+    extracted_buttons = extract_buttons(args.md_file, args.button_pattern_file)
     if args.print_extract:
         print(extracted_buttons)
+        print(f"found: {len(extracted_buttons)}")
 
     if args.psd_file:
         try:

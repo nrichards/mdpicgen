@@ -1,0 +1,22 @@
+# Each line: <RegEx to match buttons, as written in Markdown>, <Shortened name used to build image filenames>
+# Uses equals sign (=) instead of comma (,) for this CSV to avoid collisions inside the RegEx
+# TODO: Add Separator "+" and " or "
+^SHIFT$ = s
+^[B]?(utton)?[ ]?1( \\(Long press\\))?$ = 1
+^[B]?(utton)?[ ]?2( \\(Long press\\))?$ = 2
+^[B]?(utton)?[ ]?3( \\(Long press\\))?$ = 3
+^[B]?(utton)?[ ]?4( \\(Long press\\))?$ = 4
+^[B]?(utton)?[ ]?5( \\(Long press\\))?$ = 5
+^[B]?(utton)?[ ]?6( \\(Long press\\))?$ = 6
+^[B]?(utton)?[ ]?7( \\(Long press\\))?$ = 7
+^[B]?(utton)?[ ]?8( \\(Long press\\))?$ = 8
+^(turn)?[ ]?dial$ = dial
+^NO$ = n
+^OK$ = o
+^LOOPER PLAY$ = lplay
+^(LOOPER )?REC$ = lr
+^LOOPER STOP$ = ls
+^MODE PLAY( \\(RECALL\\))?$ = mplay
+^PARAM$ = param
+^SYSTEM$ = sys
+^SEQ PLAY$ = splay
