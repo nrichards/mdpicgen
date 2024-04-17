@@ -1,6 +1,7 @@
 import concurrent.futures
 import os
 import sys
+from pathlib import Path
 
 from psd_tools import PSDImage
 
@@ -18,8 +19,7 @@ BG_LAYER_NAME: str = "BG"
 
 
 def make_out_dir(out_dirname):
-    if not os.path.exists(out_dirname):
-        os.mkdir(out_dirname)
+    Path(out_dirname).mkdir(parents=True, exist_ok=True)
 
 
 def process_psd(out_dirname, psd_filename, basenames, height):
