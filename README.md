@@ -7,11 +7,11 @@ Automates maintenance of Markdown files. Generates and inserts images into a spe
 ## Usage
 
 ```
-usage: psd-in-md [-h] [--button-pattern-file BUTTON_PATTERN_FILE]
-                 [--md-out-file MD_OUT_FILE] [--psd-file PSD_FILE]
-                 [--psd-out-dir PSD_OUT_DIR] [--image-height IMAGE_HEIGHT]
-                 [--print-formatted] [--print-extract]
-                 md_file
+usage: mdpicgen [-h] [--button-pattern-file BUTTON_PATTERN_FILE]
+                [--md-out-file MD_OUT_FILE] [--psd-file PSD_FILE]
+                [--psd-out-dir PSD_OUT_DIR] [--image-height IMAGE_HEIGHT]
+                [--print-formatted] [--print-extract]
+                md_file
 
 Read Markdown and process PSD, generating images and inserting / updating into
 Markdown. PSD layer names will be used as keys. They will be matched to
