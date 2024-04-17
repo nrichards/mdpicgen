@@ -43,18 +43,13 @@ options:
 
 ## Origin
 
-To help keep Markdown editing fun, this tool aims to alleviate some of the cost of creating standardized but customized images used in technical manuals.
+To help keep Markdown editing fun for projects needing to add many images which are permutations of a source diagram, this tool will do the heavy lifting.
 
-Specifically this is designed for the needs of the Qun mk2 synthesizer project's [README.md](https://github.com/raspy135/Qun-mk2) guide. Images are helpful visualizations to teach synthesizer control combinations which users memorize in order to activate features on the synthesizer. 
+It is designed for the needs of the Qun mk2 synthesizer project's [README.md](https://github.com/raspy135/Qun-mk2) guide, originally. The guide's images are helpful visualizations which teach synthesizer control combinations. Users study these in order to activate features on the synthesizer. There are many combinations available, and many images to generate, consequently.
 
 Updating the images and the Markdown is work which is worthy of automation.
 
 # Features
-
-* Extract sequences of names of button controls from formatted Markdown tables
-* Generate images by compositing a set of layers of a diagram based upon the button control sequence's names 
-* Filter the original Markdown to a new file, adding missing or update outdated image links
-* Customization: recognize new button patterns
 
 **Before**:
 
@@ -68,18 +63,22 @@ Updating the images and the Markdown is work which is worthy of automation.
 |:--------------------------------------------------------:|-------------|
 | SHIFT + SEQ PLAY + turn dial <br> ![](doc/s_splay_d.png) | Do thing    |
 
-# Instructions and specifications
+* Extract sequences of names of button controls directly from tables in Markdown, based upon patterns from a customizable file
+* Generate images for each sequence, from the layers of a customizable illustration
+* Update the original Markdown, and add missing or update outdated image links
+
+# How to use
 
 **Workflow**
 
-1. Add a table with `"Button"` header text as the first column of a Markdown source document
-2. Add button command sequence text to a cell in that table's `"Button"` column
-3. Add a `<br>` tag at end of that text to mark this button sequence for processing
-4. Run the tool
+1. Add a table with `"Button"` header text ([customizable](#button-pattern-file)) as the first column of a Markdown source document
+2. Add button command sequence text, matching the format of the pattern file in use, to a cell in that table's `"Button"` column
+3. Add a `<br>` tag at end of that text, inside the first cell, to mark this button sequence for processing. Repeat as desired.
+4. Run the tool to generate images, and also a new Markdown file
 
 ## Details
 
-* Tables **MUST** have a first column header name of "`Button`". Non-matching tables will be ignored.
+* Tables **MUST** have a first column header name of "`Button`" ([customizable](#button-pattern-file) in `*.patset` file). Non-matching tables will be ignored.
 * Each first-column cell's contents **MUST** be formatted according to the following. Non-matching cells will be ignored. `Button sequence string` `<br>` `![](optional-link-to-image)` - see an [example](#Example) below.
   * Note that the `<br>` tag is required. 
   * Note also that the image link is optional. It will be added automatically when there is a properly formatted button sequence and `<br>` tag.
@@ -119,10 +118,10 @@ A [default button pattern file](qunmk2.patset) is provided for the Qun mk2 synth
 
 # Examples
 
-## Markdown requirements: 
+## Markdown sample: 
 
-1. Notice the first row's header is `Button`. 
-2. Notice the `<br>` tag is used only once. 
+1. Notice the first row's header is `Button`. This matches the default [patset file](qunmk2.patset).
+2. Notice the `<br>` tag is used only once
    1. With `--md-out-file`, an image link will be added, if missing.
    2. Or it will be updated, if already in the doc.
 3. Notice the "B1", "SHIFT", etc are configured in the [patset file](qunmk2.patset).
@@ -171,15 +170,10 @@ A [default button pattern file](qunmk2.patset) is provided for the Qun mk2 synth
 
 # Development notes
 
-* "Not fun" warning ... 
-  * Working with Photoshop PSD files is proving problematic due to compatibility issues. Everyone involved in the project does not own a license from Adobe and instead uses their own PSD editor. Also, the Python libraries to extract PSD data have their own issues, following Adobe's out-of-date and wrong specification, plus they are maintained by volunteers who may not have motivation to solve my particular compatibility issues. 
-  * Solution will be to migrate to 100% Python compositing. Ideas include:
-    * JSON file dictating layout of named button controls
-    * Layout could specify shapes and colors, e.g. "rectangle" and "orange". Shape drawing commands could then render the stylized shapes, and save the final image.
-    * Or, layout could use pre-built images, and specify location, image-name, and orientation. Drawing commands could render the component images by placement, and then save the final image.
-* Neat: Command to extract the text from the first column of 3+ column tables:
+"Not fun" bits, which I plan to work on:
 
-```shell
-grep "|.*|" full.md | grep -v -e "^-" -e "^Button" | \
-  sed 's/\([^|]*\)|.*/\1/g' | sort -u
-```
+* Working with Photoshop PSD files is proving problematic due to compatibility issues. Everyone involved in the project does not own a license from Adobe and instead uses their own PSD editor. Also, the Python libraries to extract PSD data have their own issues, following Adobe's out-of-date and wrong specification, plus they are maintained by volunteers who may not have motivation to solve my particular compatibility issues. 
+* Solution will be to migrate to 100% Python compositing. Ideas include:
+  * JSON file dictating layout of named button controls
+  * Layout could specify shapes and colors, e.g. "rectangle" and "orange". Shape drawing commands could then render the stylized shapes, and save the final image.
+  * Or, layout could use pre-built images, and specify location, image-name, and orientation. Drawing commands could render the component images by placement, and then save the final image.
