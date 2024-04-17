@@ -14,6 +14,7 @@
 /__pycache__
 
 /full.md
-/full_firstcol_extract.txt
 /out-full
 out_md.md
+/out_test_md.md
+/out_full_md.md

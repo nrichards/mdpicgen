@@ -15,6 +15,7 @@ __header__ = Button
 __separator__ = "+"
 __separator__ = " or "
 __separator__ = " / "
+__separator__ = ", then "
 ^SHIFT$ = s
 ^[B]?(utton)?[ ]?1[ \-a-zA-Z]*( \(Long press\))?$ = 1
 ^[B]?(utton)?[ ]?2[ \-a-zA-Z]*( \(Long press\))?$ = 2

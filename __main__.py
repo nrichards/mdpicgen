@@ -54,7 +54,6 @@ if __name__ == '__main__':
 
     if args.md_out_file:
         markdown = write_markdown(args.md_out_file, args.psd_out_dir, args.md_file, button_sequences)
-        print(markdown)
 
     if args.print_formatted:
         formatted_text = format_markdown(args.md_file)

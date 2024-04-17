@@ -33,4 +33,5 @@ MODE PLAY (RECALL) + [1-8] <br> ![](./manual_images/but/mplay_1..8.png) | Recall
 SEQ PLAY + [1-8] <br> ![](./manual_images/but/mplay_1..8_d.png) | Select Sequencer pattern
 SHIFT + LOOPER PLAY + [1-3] button <br> ![](./manual_images/but/s_lplay_1..3.png) | Import WAV file from import folder to selected track
 SYSTEM + [1-8] <br> ![](./manual_images/but/sys_1..8.png) | Temporary piano mode
-
+B[1-8] (Long press), then PARAM<br> ![](./manual_images/but/1..8_param.png) | Selects a step to lock a parameter for, when in a supported Sequencer sub-mode. See below for more detail.<br><br>(Long press PARAM, also) Clear lock for selected step, or multiple selected steps, if already set.
+SEQ PLAY + B[1-8] (Primary pattern) + B[1-8] (2nd pattern) in any sub-mode <br> ![](manual_images/but/splay_1234567812345678.png) | This is a shortcut to select parallel pattern select. <br> * If you press another button while you keep pressing the primary pattern button, then it will be for the 3rd pattern.<br> * If you release the primary pattern button, it will become **Pattern chaining**. <br> * Assign the same pattern one more time to erase the assignment. <br> * Only normal parallel pattern ("R0") can be selected. 

@@ -1,5 +1,6 @@
 import csv
 import io
+import os
 import re
 import sys
 from collections import Counter
@@ -9,8 +10,10 @@ from mistletoe.block_token import Table, TableRow, Document
 from mistletoe.markdown_renderer import MarkdownRenderer
 from mistletoe.span_token import RawText, HtmlSpan
 
+from constants import HTML_BREAK_PATTERN
+
 # For debugging parsing
-DEBUG_LOG_EXTRACT = False
+DEBUG_LOG_EXTRACT = True
 
 # For generating image filenames, the separator between alphanumeric chars, e.g. "s_mplay_123"
 SHORT_NAME_INFIX_SEPARATOR = "_"
@@ -21,18 +24,6 @@ TABLE_HEADER_KEY = "__header__"
 SEPARATOR_KEY = "__separator__"
 SEPARATOR_VALUE_WRAPPER = "\""  # just a quote, for later stripping of the quoted string values
 COMMENT_KEY = "#"
-
-
-# TODO
-# Keep line-number of finding
-# E.g. {284 : "MODE PLAY + SYSTEM + turn dial", 285: "SYSTEM + turn dial"}
-
-
-# TODO - handle Image. This is a Cell. The children form a button sequence where we WANT to have images.
-# 0 = {RawText} <mistletoe.span_token.RawText content='SHIFT + MODE PLAY ' at 0x1053bd490>
-# 1 = {HtmlSpan} <mistletoe.span_token.HtmlSpan content='<br>' at 0x1053bd4d0>
-# 2 = {RawText} <mistletoe.span_token.RawText content=' ' at 0x1053bd550>
-# 3 = {Image} <mistletoe.span_token.Image with 0 children src='./manual_images/but/s_mplay.pn'...+1 title='' ...
 
 
 def extract_button_sequences(md_file, but_pat_file) -> [[]]:
@@ -88,7 +79,6 @@ class ButtonSequence:
         self.sequence_mapping = mapping
         self.line_number = line_no
         self.basename = format_image_basename(self.sequence_mapping)
-
 
     @staticmethod
     def to_sequence_mapping_list(button_sequences: ["ButtonSequence"]):
@@ -215,17 +205,28 @@ class ExtractButtonsFromMarkdown:
         cell = tablerow.children[0]
 
         # constrain to require <br> tag
-        if (self.require_br_tag and
-                len(cell.children) > 1 and
-                type(cell.children[1]) is HtmlSpan):
-            # Extract the first token with content.
-            # Presumes "B1 <br> ![](path-to-image)", and extracts "B1". Also supports no image, here.
-            token = cell.children[0]
-            if type(token) is RawText:
+        if self.require_br_tag:
+            has_enough_children = len(cell.children) > 1
+            is_first_token_raw_text = len(cell.children) > 0 and type(cell.children[0]) is RawText
+            has_html_br_tag_as_second_token = \
+                (has_enough_children and
+                 type(cell.children[1]) is HtmlSpan and
+                 re.match(HTML_BREAK_PATTERN, cell.children[1].content, re.IGNORECASE))
+
+            if has_enough_children and is_first_token_raw_text and has_html_br_tag_as_second_token:
+                # Extract the first token with content.
+                # Presumes "B1 <br> ![](path-to-image)", and extracts "B1". Also supports no image.
+                token = cell.children[0]
                 button_sequence = self.extract_rawtext(token)
+            else:
+                if DEBUG_LOG_EXTRACT:
+                    print(f"ignored cell{', needs more children' if not has_enough_children else ''}"
+                          + f"{', first token must be raw text' if not is_first_token_raw_text else ''}"
+                          + f"{', second token must be HTML br-tag' if not has_html_br_tag_as_second_token else ''}. "
+                          + f"cell={cell.children}",
+                          file=sys.stderr)
         else:
-            if DEBUG_LOG_EXTRACT:
-                print(f"ignored cell {cell.children}", file=sys.stderr)
+            print(f"error: code {os.path.basename(__file__)} is written to require br-tag, please re-code it", file=sys.stderr)
 
         if button_sequence:
             result = ButtonSequence(button_sequence, tablerow.line_number)
