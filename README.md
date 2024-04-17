@@ -53,8 +53,8 @@ Updating the images and the Markdown is work which is worthy of automation.
 
 * Extract sequences of names of button controls from formatted Markdown tables
 * Generate images by compositing a set of layers of a diagram based upon the button control sequence's names 
-* **FUTURE**: _Update the original Markdown with generated images_
-* Customize: button patterns
+* Filter the original Markdown, update image links, and add missing image links
+* Customization: recognize new button patterns
 
 **Before**
 

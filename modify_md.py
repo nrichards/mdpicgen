@@ -40,6 +40,8 @@ def write_markdown(md_out_file, image_out_path, md_in_file, button_sequences: [B
                         pass
 
                 fout.write(out_line)
+                if DEBUG_LOG_MODIFY:
+                    print("OUT: " + out_line.strip('\n'), file=sys.stderr)
 
 
 def update_or_replace_image_in_markdown(line, new_image_path):
@@ -52,7 +54,7 @@ def update_or_replace_image_in_markdown(line, new_image_path):
 
     # IN: B1 <br> ![](img) | desc
     # OUT: 'B1 ', ' ![](img) | desc'
-    split_lines = re.split(HTML_BREAK_PATTERN, line, re.IGNORECASE)
+    split_lines = re.split(pattern=HTML_BREAK_PATTERN, string=line, maxsplit=1, flags=re.IGNORECASE)
 
     if len(split_lines) <= 1:
         if DEBUG_LOG_MODIFY:
@@ -60,14 +62,28 @@ def update_or_replace_image_in_markdown(line, new_image_path):
             print(f"warning: ignore unusual line, missing br-tag: \"{temp}\"", file=sys.stderr)
         return line
 
+    # TODO: Flags are fragile. Find a better algorighmic way to replace these.
+    first = True
+    column_one = True
+
     modified_lines = []
     for segment in split_lines:
-        # IN: ' ![](img) | desc'
-        # OUT: ' ![](new_img)'
-        # or
-        # IN: ' | desc'
-        # OUT: ' ![](new_img)'
-        modified_line = re.sub(replacement_pattern, fr"![\1]({new_image_path})\3", segment)
+        modified_line = segment
+        if first:
+            first = False
+        elif column_one:
+            # IN: ' ![](img) | desc'
+            # OUT: ' ![](new_img)'
+            if re.search( r"^( )?!\[.*?]\(.+?\)[ |]?", segment, re.IGNORECASE):
+                modified_line = re.sub(replacement_pattern, fr"![\1]({new_image_path})\3", segment, re.IGNORECASE)
+            else:
+                # ... or
+                # IN: ' | desc'
+                # OUT: ' ![](new_img)'
+                modified_line = f" ![]({new_image_path}) {segment}"
+
+            column_one = False
+
         modified_lines.append(modified_line)
 
     # Join the modified lines with '<br>' as separator
