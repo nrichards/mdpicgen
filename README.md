@@ -82,10 +82,10 @@ Updating the images and the Markdown is work which is worthy of automation.
 * Each first-column cell's contents **MUST** be formatted according to the following. Non-matching cells will be ignored. `Button sequence string` `<br>` `![](optional-link-to-image)` - see an [example](#Example) below.
   * Note that the `<br>` tag is required. 
   * Note also that the image link is optional. It will be added automatically when there is a properly formatted button sequence and `<br>` tag.
-* Group names of controls in a **button sequence string**, a formatted sequence. E.g. "SHIFT + B1".
+* Group names of controls in a **button sequence string**, a formatted sequence. E.g. "SHIFT + B1". The separators between elements in the grouped sequences are customizable in the [patset file](#button-pattern-file).
   * Internally, the **button sequence string** is parsed to individual button names, e.g. "SHIFT" and "B1"
   * The individual button names are used to extract layers. Then a final image is composited from those layers.
-* Button names may differ from the names used for the diagram layers. A mapping between the user-facing formatted sequence naming and the layers is implemented.
+* Button names may differ from the names used for the diagram layers. So, a mapping between the user-facing formatted sequence naming and the layers is implemented.
 * Images are sized down to fit in tables. Use the `--image-height` parameter to customize the height.
 * PSD file must have a layer titled, `"BG"`. This will be composited behind all other layers during image generation.
 * PSD file layer names must include short-names. These short-names must be located after a hyphen (-) in the layer name.
