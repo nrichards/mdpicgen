@@ -1,4 +1,4 @@
-from psd_in_md import (format_markdown, process_psd, extract_button_sequences, format_image_basename, write_markdown,
+from mdpicgen import (format_markdown, process_psd, extract_button_sequences, format_image_basename, write_markdown,
                        ButtonSequence)
 import sys
 import os

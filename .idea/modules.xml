@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/psd-in-md.iml" filepath="$PROJECT_DIR$/psd-in-md.iml" />
+      <module fileurl="file://$PROJECT_DIR$/mdpicgen.iml" filepath="$PROJECT_DIR$/mdpicgen.iml" />
     </modules>
   </component>
 </project>

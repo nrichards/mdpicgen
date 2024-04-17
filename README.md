@@ -1,4 +1,4 @@
-# psd-in-md
+# mdpicgen
 
 Helps keep Markdown editing fun.
 
