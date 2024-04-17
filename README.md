@@ -66,7 +66,7 @@ Updating the images and the Markdown is work which is worthy of automation.
 
 |                          Button                          | Description |
 |:--------------------------------------------------------:|-------------|
-| SHIFT + SEQ PLAY + turn dial <br> ![](out/s_splay_d.png) | Do thing    |
+| SHIFT + SEQ PLAY + turn dial <br> ![](doc/s_splay_d.png) | Do thing    |
 
 # Instructions and specifications
 
