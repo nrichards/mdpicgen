@@ -1,6 +1,6 @@
 # Each line: button rule or separator rule
 # Button rule:
-#   FORMAT: RegEx to match buttons, as written in Markdown = Shortened name used to build image filenames>
+#   FORMAT: <RegEx to match buttons, as written in Markdown> = <Shortened name used to build image filenames>
 # Separator rule:
 #   FORMAT: __separator__ = "+"
 #   One or more.
