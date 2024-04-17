@@ -53,20 +53,20 @@ Updating the images and the Markdown is work which is worthy of automation.
 
 * Extract sequences of names of button controls from formatted Markdown tables
 * Generate images by compositing a set of layers of a diagram based upon the button control sequence's names 
-* Filter the original Markdown, update image links, and add missing image links
+* Filter the original Markdown to a new file, adding missing or update outdated image links
 * Customization: recognize new button patterns
 
-**Before**
+**Before**:
 
 |              Button               | Description |
 |:---------------------------------:|-------------|
 | SHIFT + SEQ PLAY + turn dial <br> | Do thing    |
 
-**After**
+**After**:
 
-|                           Button                           | Description |
-|:----------------------------------------------------------:|-------------|
-| SHIFT + SEQ PLAY + turn dial <br> ![](./doc/s_splay_d.png) | Do thing    |
+|                          Button                          | Description |
+|:--------------------------------------------------------:|-------------|
+| SHIFT + SEQ PLAY + turn dial <br> ![](out/s_splay_d.png) | Do thing    |
 
 # Instructions and specifications
 
@@ -82,7 +82,7 @@ Updating the images and the Markdown is work which is worthy of automation.
 * Tables **MUST** have a first column header name of "`Button`". Non-matching tables will be ignored.
 * Each first-column cell's contents **MUST** be formatted according to the following. Non-matching cells will be ignored. `Button sequence string` `<br>` `![](optional-link-to-image)` - see an [example](#Example) below.
   * Note that the `<br>` tag is required. 
-  * Note also that the image link is optional. **FUTURE:** _It will be added automatically when there is a properly formatted button sequence and `<br>` tag._
+  * Note also that the image link is optional. It will be added automatically when there is a properly formatted button sequence and `<br>` tag.
 * Group names of controls in a **button sequence string**, a formatted sequence. E.g. "SHIFT + B1".
   * Internally, the **button sequence string** is parsed to individual button names, e.g. "SHIFT" and "B1"
   * The individual button names are used to extract layers. Then a final image is composited from those layers.
@@ -119,11 +119,14 @@ A [default button pattern file](qunmk2.patset) is provided for the Qun mk2 synth
 
 # Examples
 
-Markdown source document showing a supported table and cells. Illustrates:
+## Markdown requirements: 
 
-1. Supported cell pattern, already populated with an image path. Image will be generated.
-2. Supported cell pattern, and needing an image. Image will be generated. **FUTURE**: _Cell contents will be updated with image link after br-tag._ 
-3. Cell pattern not supported. Has no br-tag. No image will be generated, and no cell modifications will be made. 
+1. Notice the first row's header is `Button`. 
+2. Notice the `<br>` tag is used only once. 
+   1. With `--md-out-file`, an image link will be added, if missing.
+   2. Or it will be updated, if already in the doc.
+3. Notice the "B1", "SHIFT", etc are configured in the [patset file](qunmk2.patset).
+
 
 ```markdown
 |               Button               | Description                            |
@@ -133,27 +136,33 @@ Markdown source document showing a supported table and cells. Illustrates:
 |             SYS + B4               | No br-tag. Won't receive image.        |
 ```
 
+## At command line -- show program options, verbosely
 
-Commandline run, showing options, verbosely:
+* `python3 __main__.py`, or `python3 __main__.py -h`
 
-* `python3 __main__.py` and `python3 __main__.py -h`
-
-Formats Markdown file, generates image to the `out` directory:
+## Generate images for a Markdown file to the `out` directory
 
 * `python3 __main__.py test.md --psd-out-dir out --psd-file test.psd`
 
-Shows button sequences extracted from Markdown file:
+## Add and update image links with a custom path to a new Markdown file
+
+* `python3 __main.py__ test.md --psd-out-dir custom/image/path --md-out-file out_test_md.md`
+
+## Print all found button sequences from a Markdown file
 
 * `python3 __main__.py test.md --print-extract`
 
-Shows extracted button sequences, and uses a custom button pattern file:
+## Read a custom button pattern file, and find button sequences in a Markdown file
 
 * `python3 __main__.py test.md --print-extract --button-pattern-file custom.patset`
 
-Shows formatted Markdown file:
+## Utility to format and print a Markdown file
 
 * `python3 __main__.py test.md --print-formatted`
 
+# Limitations
+
+* Only one `<br>` tag should be present in a cell for a matching table's first-column. With `--md-out-file`, each br-tag will result in a new image added to the Markdown.
 
 # Requirements
 
