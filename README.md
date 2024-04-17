@@ -2,7 +2,7 @@
 
 Helps keep Markdown editing fun.
 
-Automates maintenance of Markdown files. Generates and inserts images into a specially formatted Markdown.
+Automates maintenance of Markdown files containing patterend images. Generates from, and inserts or updates images into a Markdown.
 
 ## Usage
 
@@ -45,9 +45,9 @@ options:
 
 To help keep Markdown editing fun for projects needing to add many images which are permutations of a source diagram, this tool will do the heavy lifting.
 
-It is designed for the needs of the Qun mk2 synthesizer project's [README.md](https://github.com/raspy135/Qun-mk2) guide, originally. The guide's images are helpful visualizations which teach synthesizer control combinations. Users study these in order to activate features on the synthesizer. There are many combinations available, and many images to generate, consequently.
+It is designed for the needs of the Qun mk2 synthesizer project's [README.md](https://github.com/raspy135/Qun-mk2) guide documentation, originally. Adding images to the guide provides helpful visualizations to teach synthesizer control combinations. Users may refer to pictures in order to activate features on the synthesizer, in addition to text. There are many combinations available with the Qun, and many images to generate, consequently.
 
-Updating the images and the Markdown is work which is worthy of automation.
+So updating 60+ structured images and their Markdown links is work worthy of automation.
 
 # Features
 
@@ -65,7 +65,7 @@ Updating the images and the Markdown is work which is worthy of automation.
 
 * Extract sequences of names of button controls directly from tables in Markdown, based upon patterns from a customizable file
 * Generate images for each sequence, from the layers of a customizable illustration
-* Update the original Markdown, and add missing or update outdated image links
+* Update the original Markdown, and add missing or update outdated image links, without imposing auto-reformatting on potentially hand-edited (dense) tables
 
 # How to use
 
@@ -167,13 +167,40 @@ A [default button pattern file](qunmk2.patset) is provided for the Qun mk2 synth
 
 * python 3.10+
 * psd-tools 1.9
+* Pillow - image manipulation
+* mistletoe 1.3 - Markdown parsing
 
-# Development notes
+## Thanks
 
-"Not fun" bits, which I plan to work on:
+* Wow Python, such easy, much functionality
+* Google + Gemini AI for teaching me moar Python and helping me design the tool. 
+  * Details: suggested names for this tool, wrote initial versions of many functions, introduced me to many basic packages + helped me choose 3rd party libraries, gave me sample code for each, suggested high-level project organization, 
+
+# Development 
+
+## Future
+
+### Alternative image sources
+
+"Not fun" bit about this, which I plan to work on:
 
 * Working with Photoshop PSD files is proving problematic due to compatibility issues. Everyone involved in the project does not own a license from Adobe and instead uses their own PSD editor. Also, the Python libraries to extract PSD data have their own issues, following Adobe's out-of-date and wrong specification, plus they are maintained by volunteers who may not have motivation to solve my particular compatibility issues. 
-* Solution will be to migrate to 100% Python compositing. Ideas include:
+* **Solution** will be to migrate to 100% Python compositing. Ideas include:
   * JSON file dictating layout of named button controls
   * Layout could specify shapes and colors, e.g. "rectangle" and "orange". Shape drawing commands could then render the stylized shapes, and save the final image.
-  * Or, layout could use pre-built images, and specify location, image-name, and orientation. Drawing commands could render the component images by placement, and then save the final image.
+  * [**preferred**] Or, layout could use pre-built images, and specify location, image-name, and orientation. Drawing commands could render the component images by placement, and then save the final image.
+
+### Column two, three (etc.) image placements 
+
+Currently, column one is the only column for image extraction and placement. Markdown tables can be written with, or without boundary edge markers (|), which complicates parsing.
+* **Solution**: Support arbitrary columns by leveraging [mistletoe](#requirements) to first format and normalize Markdown tables in-memory, then I may rely upon a regular table row boundary pattern and make changes, leveraging that and the non-whitespace elements to inject / update image links, preserving the original non-auto-formatted Markdown's look
+
+### Animated GIFs and more: press-duration visualization of buttons
+
+* Currently, a static PNG is generated illustrating the original Markdown documentation's chord of buttons needing pressing e.g. to initiate a feature. Occasionally button presses requre holding for a longer duration than just a moment, and there is no way to represent this with a static image.
+* **Idea**:
+  * Take a button sequence with `"(Long press)"` instructions and make a GIF out of it, _flashing buttons with a given timing_. And, take multistep sequences which involve pressing the same button multiple times, and represent those with flashing. Pillow library can generate GIFs from source images. 
+  * A simpler approach to _statically represent the duration_, and repeated pressing, could be used. This could suffer from visual over-complication, becoming more distracting than educational. 
+    * E.g. to illustrate this, activated buttons could also have a double-outline, or perhaps an asterisk shaped flare of rays emerging from underneath the button for long-press, and a super-script dot to indicate the number of repeated presses required. 
+    * Appropriately, sheet music has the concept of [long press](https://en.wikipedia.org/wiki/Note_value) and also [repeating phrases](https://en.wikipedia.org/wiki/Repeat_sign). So it may be worthwhile to consider their conceits.
+  * A _combination approach_ could be used, also where the first frame of the GIF is the static image and subsequent frames flash buttons. This might dazzle the reader more than help. Though in my opinion utility of productivity is over-emphasized - the challenging [form follows function](https://en.wikipedia.org/wiki/Form_follows_function) practice, in short.
