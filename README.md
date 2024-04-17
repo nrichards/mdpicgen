@@ -18,8 +18,7 @@ Markdown. PSD layer names will be used as keys. They will be matched to
 formatted key sequences [configurable] found in Markdown tables with first
 columns labelled "Button" [also configurable]. Layers will be composited into
 images according to the sequences and saved. Images will linked into Markdown
-in the second column, after the "Button" column. Markdown will be dumped to
-stdout.
+in the second column, after the "Button" column.
 
 positional arguments:
   md_file               Input filename for the Markdown file

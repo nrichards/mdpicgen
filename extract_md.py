@@ -4,11 +4,13 @@ import re
 import sys
 from collections import Counter
 from pathlib import Path
-from dataclasses import dataclass
 
 from mistletoe.block_token import Table, TableRow, Document
 from mistletoe.markdown_renderer import MarkdownRenderer
 from mistletoe.span_token import RawText, HtmlSpan
+
+# For debugging parsing
+DEBUG_LOG_EXTRACT = False
 
 # For generating image filenames, the separator between alphanumeric chars, e.g. "s_mplay_123"
 SHORT_NAME_INFIX_SEPARATOR = "_"
@@ -43,7 +45,8 @@ def extract_button_sequences(md_file, but_pat_file) -> [[]]:
     which are used as components of basenames of generated image files illustrating the button sequence
     """
     extractor = ExtractButtonsFromMarkdown(md_file, but_pat_file)
-    print(f"rejected: {len(extractor.could_not_find)}", file=sys.stderr)
+    if DEBUG_LOG_EXTRACT:
+        print(f"rejected: {len(extractor.could_not_find)}", file=sys.stderr)
     return extractor.button_sequences
 
 
@@ -76,10 +79,16 @@ def format_image_basename(button_sequence) -> str:
     return result
 
 
-@dataclass(frozen=True)
 class ButtonSequence:
     sequence_mapping: [{}]
     line_number: int
+    basename: str = ""
+
+    def __init__(self, mapping, line_no):
+        self.sequence_mapping = mapping
+        self.line_number = line_no
+        self.basename = format_image_basename(self.sequence_mapping)
+
 
     @staticmethod
     def to_sequence_mapping_list(button_sequences: ["ButtonSequence"]):
@@ -205,17 +214,21 @@ class ExtractButtonsFromMarkdown:
         # first cell: assumes first column of table
         cell = tablerow.children[0]
 
-        # first token with user content: assumes "B1 <br> ![](path-to-image)", and extracts "B1"
-        token = cell.children[0]
-        if type(token) is RawText:
-            button_sequence = self.extract_rawtext(token)
-
-        # constrain to require br-tag
-        if (button_sequence and
-                self.require_br_tag and
+        # constrain to require <br> tag
+        if (self.require_br_tag and
                 len(cell.children) > 1 and
                 type(cell.children[1]) is HtmlSpan):
-            result = ButtonSequence(sequence_mapping=button_sequence, line_number=tablerow.line_number)
+            # Extract the first token with content.
+            # Presumes "B1 <br> ![](path-to-image)", and extracts "B1". Also supports no image, here.
+            token = cell.children[0]
+            if type(token) is RawText:
+                button_sequence = self.extract_rawtext(token)
+        else:
+            if DEBUG_LOG_EXTRACT:
+                print(f"ignored cell {cell.children}", file=sys.stderr)
+
+        if button_sequence:
+            result = ButtonSequence(button_sequence, tablerow.line_number)
 
         return result
 
@@ -267,7 +280,8 @@ class ExtractButtonsFromMarkdown:
                 short_name = short_names[match_index]
                 filtered = filtered + [{element: short_name}]
             else:
-                print(f"could not find \"{element}\". Poisoning \"{sequence}\"", file=sys.stderr)
+                if DEBUG_LOG_EXTRACT:
+                    print(f"could not find \"{element}\". Poisoning \"{sequence}\"", file=sys.stderr)
                 self.could_not_find = self.could_not_find + [element]
                 poisoned = True
 
