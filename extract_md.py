@@ -13,7 +13,7 @@ from mistletoe.span_token import RawText, HtmlSpan
 from constants import HTML_BREAK_PATTERN
 
 # For debugging parsing
-DEBUG_LOG_EXTRACT = True
+DEBUG_LOG_EXTRACT = False
 
 # For generating image filenames, the separator between alphanumeric chars, e.g. "s_mplay_123"
 SHORT_NAME_INFIX_SEPARATOR = "_"

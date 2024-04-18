@@ -3,3 +3,4 @@ wheel~=0.41.2
 setuptools~=68.2.0
 psd-tools~=1.9
 mistletoe~=1.3.0
+pillow

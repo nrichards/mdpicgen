@@ -1,11 +1,11 @@
 import concurrent.futures
 import os
-
 import sys
+
 from psd_tools import PSDImage
 
 from extract_md import SHORT_NAME_INFIX_SEPARATOR
-from util import make_out_dir
+from util import make_out_dir, size_from_height
 from constants import BG_LAYER_NAME
 
 # For debugging generating
@@ -120,9 +120,7 @@ class PSDInMd:
             viewport=bbox,
             layer_filter=lambda candidate_layer: self.can_find_layer_for_any_shortname(candidate_layer, components))
 
-        new_height = height
-        reduction_scalar = new_height / image.size[1]
-        new_width = int(reduction_scalar * image.size[0])
-        resized_image = image.resize([new_width, new_height])
+        new_size = size_from_height(height, image.size)
+        resized_image = image.resize(new_size)
 
-        resized_image.save(f'{out_dirname}/{basename}.png')
+        resized_image.save(f'{out_dirname}/{basename}.png', format="PNG")

@@ -207,7 +207,7 @@ A default [imageset file](qunmk2_imageset.csv) and [directory](imageset) is prov
 
 * python 3.10+
 * psd-tools 1.9
-* Pillow - image manipulation
+* pillow - image manipulation
 * mistletoe 1.3 - Markdown parsing
 
 ## Thanks

@@ -1,6 +1,7 @@
-from mdpicgen import (format_markdown, process_psd, process_imageset, extract_button_sequences, write_markdown)
 import sys
 import os
+
+from mdpicgen import (format_markdown, process_psd, process_imageset, extract_button_sequences, write_markdown)
 
 DEBUG_LOG_MAIN = True
 
@@ -60,6 +61,7 @@ if __name__ == '__main__':
 
     # Extract from Markdown
     button_sequences = extract_button_sequences(args.md_file, args.button_pattern_file)
+    basenames = [seq.basename for seq in button_sequences]
 
     if args.print_extract:
         for seq in button_sequences:
@@ -69,7 +71,6 @@ if __name__ == '__main__':
 
     if args.image_source == "psd" and args.psd_file:
         try:
-            basenames = [seq.basename for seq in button_sequences]
             process_psd(args.image_out_dir, args.psd_file, basenames, args.image_height)
         except Exception as e:
             print(f"Aborting. Error processing PSD file: {e}", file=sys.stderr)
@@ -77,7 +78,6 @@ if __name__ == '__main__':
 
     if args.image_source == 'imageset':
         try:
-            basenames = [seq.basename for seq in button_sequences]
             process_imageset(args.image_out_dir, args.imageset_file, args.imageset_dir, basenames, args.image_height)
         except Exception as e:
             print(f"Aborting. Error processing imageset: {e}", file=sys.stderr)
