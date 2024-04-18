@@ -1,5 +1,4 @@
-from mdpicgen import (format_markdown, process_psd, extract_button_sequences, format_image_basename, write_markdown,
-                      ButtonSequence)
+from mdpicgen import (format_markdown, process_psd, process_imageset, extract_button_sequences, write_markdown)
 import sys
 import os
 
@@ -35,6 +34,8 @@ if __name__ == '__main__':
     parser.add_argument("--print-formatted", action='store_true',
                         help="Print formatted Input Markdown to stdout")
     parser.add_argument("--print-extract", action='store_true', help="Print extracted buttons to stdout")
+
+    # Image sources are mutually exclusive commands with multiple parameters
 
     subparsers = parser.add_subparsers(dest="image_source", required=False,
                                        title="Image generation data sources",
@@ -72,6 +73,14 @@ if __name__ == '__main__':
             process_psd(args.image_out_dir, args.psd_file, basenames, args.image_height)
         except Exception as e:
             print(f"Aborting. Error processing PSD file: {e}", file=sys.stderr)
+            exit(1)
+
+    if args.image_source == 'imageset':
+        try:
+            basenames = [seq.basename for seq in button_sequences]
+            process_imageset(args.image_out_dir, args.imageset_file, args.imageset_dir, basenames, args.image_height)
+        except Exception as e:
+            print(f"Aborting. Error processing imageset: {e}", file=sys.stderr)
             exit(1)
 
     if args.md_out_file:

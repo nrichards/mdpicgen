@@ -1,5 +1,7 @@
 import csv
 
+from PIL import Image
+
 # noinspection PyUnresolvedReferences
 from extract_md import extract_button_sequences, format_image_basename, SHORT_NAME_INFIX_SEPARATOR, ButtonSequence
 # noinspection PyUnresolvedReferences
@@ -11,40 +13,31 @@ def process_psd(out_dirname, psd_filename, basenames, height):
     PSDInMd().process_psd(out_dirname, psd_filename, basenames, height)
 
 
-def process_imageset(out_dirname, imageset_filename, basenames, height):
-    ims = ImageSet()
-    pass
+def process_imageset(out_dirname, imageset_filename, imageset_dir, basenames, height):
+    ImageSet().process_imageset(out_dirname, imageset_filename, imageset_dir, basenames, height)
 
 
-class ImageSet():
-    def read_scene_description(self, csv_file):
-        """
-        Reads the scene description from a CSV file.
+class ImageSet:
+    layers = []
 
-        Args:
-            csv_file: Path to the CSV file containing scene information.
+    def process_imageset(self, out_dirname, imageset_filename, imageset_dir, basenames, height):
+        self.load_imageset(imageset_filename, imageset_dir)
+        print("what is next")
 
-        Returns:
-            A list of dictionaries, where each dictionary represents a layer.
-        """
-        layers = []
+    def load_imageset(self, csv_file, imageset_dir):
         with open(csv_file, 'r') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 layer = {
-                    "image": self.load_image(row["image_file"]),
-                    "layer_name": row["layer_name"],
-                    "x": int(row["x_pos"]),
-                    "y": int(row["y_pos"]),
+                    "image": self.load_image(f"{imageset_dir}/{row['image_file']}"),
+                    "layer_name": row['layer_name'],
+                    "x": int(row['x_pos']),
+                    "y": int(row['y_pos']),
                 }
-                # # Add optional values if included in the CSV
-                # if "width" in row:
-                #     layer["width"] = int(row["width"])
-                # if "height
+                self.layers.append(layer)
 
         # TODO do something with the layer
-        pass
-
+        print(self.layers)
 
     def load_image(self, image_filename):
-        pass
+        return Image.open(image_filename)

@@ -1,5 +1,5 @@
 image_file,layer_name,x_pos,y_pos,width,height
-bg.jpg,BG,0,0,1856,1236
+bg.png,BG,0,0,1856,1236
 s.png,s,1600,200
 o.png,1,50,500
 o.png,2,250,500
