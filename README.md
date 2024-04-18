@@ -220,7 +220,11 @@ A default [imageset file](qunmk2_imageset.csv) and [directory](imageset) is prov
 
 ## Future
 
-### Alternative image sources
+### ~Alternative image sources~
+
+**DONE** imageset support added. 114 times faster than PSD.
+
+old:
 
 "Not fun" bit about this, which I plan to work on:
 
