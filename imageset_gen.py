@@ -1,4 +1,6 @@
+import concurrent.futures
 import csv
+import os
 import sys
 
 from PIL import Image
@@ -23,14 +25,21 @@ class ImageSet:
         if DEBUG_LOG_IMAGESET:
             print(f"unique_basenames: {unique_basenames}", file=sys.stderr)
 
-        for basename in unique_basenames:
-            components = self.process_basename(basename)
+        decent_performance = int(os.cpu_count() * 0.8)
+        pool = concurrent.futures.ThreadPoolExecutor(max_workers=decent_performance)
 
-            composite_image = self.generate_image(out_dirname, height, components, self.layers)
-            composite_image.save(f"{out_dirname}/{basename}.{IMAGE_EXTENSION}", format=IMAGE_EXTENSION.upper())
+        for basename in unique_basenames:
+            pool.submit(self.process_image, basename, height, out_dirname)
+
+        pool.shutdown(wait=True)
 
         if DEBUG_LOG_IMAGESET:
             print(f"composited: {len(unique_basenames)}", file=sys.stderr)
+
+    def process_image(self, basename, height, out_dirname):
+        components = self.process_basename(basename)
+        composite_image = self.generate_image(out_dirname, height, components, self.layers)
+        composite_image.save(f"{out_dirname}/{basename}.{IMAGE_EXTENSION}", format=IMAGE_EXTENSION.upper())
 
     def process_basename(self, basename) -> [str]:
         intermediate_components = basename.split(SHORT_NAME_INFIX_SEPARATOR)
