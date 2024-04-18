@@ -91,6 +91,7 @@ So updating 60+ structured images and their Markdown links is work worthy of aut
 * PSD file layer names must include short-names. These short-names must be located after a hyphen (-) in the layer name.
   * E.g. the `"s"` in the layer name, `"SHIFT - s"`
   * See also the [image name discussion](#generated-image-names).
+* PSD layers **should** be rasterized, first. They may be vector layers and this may result in empty images being generated. Rasterizing can fix this issue in some cases. Overall, PSD files can be unexpectedly problematic.
 
 ## Generated image names
 
@@ -141,11 +142,11 @@ A [default button pattern file](qunmk2.patset) is provided for the Qun mk2 synth
 
 ## Generate images for a Markdown file to the `out` directory
 
-* `python3 __main__.py test.md --psd-out-dir out --psd-file test.psd`
+* `python3 __main__.py test.md psd --psd-out-dir out --psd-file test.psd`
 
 ## Add and update image links with a custom path to a new Markdown file
 
-* `python3 __main.py__ test.md --psd-out-dir custom/image/path --md-out-file out_test_md.md`
+* `python3 __main.py__ test.md psd --psd-out-dir custom/image/path --md-out-file out_test_md.md`
 
 ## Print all found button sequences from a Markdown file
 
