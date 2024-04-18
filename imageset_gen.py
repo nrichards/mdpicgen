@@ -100,7 +100,7 @@ class ImageSet:
             if not output_image:
                 output_image = layer["image"].copy()
             else:
-                output_image.paste(layer["image"], (layer["x"], layer["y"]))
+                output_image.alpha_composite(layer["image"], (layer["x"], layer["y"]))
 
         new_size = size_from_height(height, output_image.size)
         if RESIZE_IMAGE:
