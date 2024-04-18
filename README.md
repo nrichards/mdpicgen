@@ -7,38 +7,70 @@ Automates maintenance of Markdown files containing patterend images. Generates f
 ## Usage
 
 ```
-usage: mdpicgen [-h] [--button-pattern-file BUTTON_PATTERN_FILE]
-                [--md-out-file MD_OUT_FILE] [--psd-file PSD_FILE]
-                [--psd-out-dir PSD_OUT_DIR] [--image-height IMAGE_HEIGHT]
-                [--print-formatted] [--print-extract]
-                md_file
+usage: mdpicgen [-h] --md-file MD_FILE [--md-out-file MD_OUT_FILE]
+                [--image-out-dir IMAGE_OUT_DIR]
+                [--button-pattern-file BUTTON_PATTERN_FILE]
+                [--image-height IMAGE_HEIGHT] [--print-formatted]
+                [--print-extract]
+                {imageset,psd} ...
 
-Read Markdown and process PSD, generating images and inserting / updating into
-Markdown. PSD layer names will be used as keys. They will be matched to
-formatted key sequences [configurable] found in Markdown tables with first
+Read Markdown and process image layers, generating images and inserting /
+updating into Markdown. Layer names will be used as keys. They will be matched
+to formatted key sequences [configurable] found in Markdown tables with first
 columns labelled "Button" [also configurable]. Layers will be composited into
 images according to the sequences and saved. Images will linked into Markdown
 in the second column, after the "Button" column.
 
-positional arguments:
-  md_file               Input filename for the Markdown file
-
 options:
   -h, --help            show this help message and exit
-  --button-pattern-file BUTTON_PATTERN_FILE
-                        Pattern filename for matching buttons (Default:
-                        'qunmk2.patset')
+  --md-file MD_FILE     Input filename for the Markdown file
   --md-out-file MD_OUT_FILE
                         Output filename for Input Markdown with updated image
                         links
-  --psd-file PSD_FILE   Input filename for the PSD file
-  --psd-out-dir PSD_OUT_DIR
+  --image-out-dir IMAGE_OUT_DIR
                         Output directory name for composited images, will be
                         created (Default: 'out')
+  --button-pattern-file BUTTON_PATTERN_FILE
+                        Pattern filename for matching buttons (Default:
+                        'qunmk2.patset')
   --image-height IMAGE_HEIGHT
                         Scale generated images to height (Default: 48)
   --print-formatted     Print formatted Input Markdown to stdout
   --print-extract       Print extracted buttons to stdout
+
+Image generation data sources:
+  {imageset,psd}        Optional subcommands for how to generate images: the
+                        source of image data
+    imageset            Use a directory of images for the layers
+    psd                 Read image data from PSD file - depends on Adobe(tm)
+                        Photoshop tech
+```
+
+## imageset
+
+```
+usage: mdpicgen imageset [-h] [--imageset-file IMAGESET_FILE]
+                         [--imageset-dir IMAGESET_DIR]
+
+options:
+  -h, --help            show this help message and exit
+  --imageset-file IMAGESET_FILE
+                        Specifies what image filename will be used for what
+                        layer, and their xy coordinates (Default:
+                        'qunmk2_imageset.csv')
+  --imageset-dir IMAGESET_DIR
+                        Directory containing images used as layers defined in
+                        '--imageset-file' (Default: 'imageset')
+```
+
+## psd
+
+```
+usage: mdpicgen psd [-h] --psd-file PSD_FILE
+
+options:
+  -h, --help           show this help message and exit
+  --psd-file PSD_FILE  Input filename for the PSD file
 ```
 
 ## Origin
@@ -87,10 +119,12 @@ So updating 60+ structured images and their Markdown links is work worthy of aut
   * The individual button names are used to extract layers. Then a final image is composited from those layers.
 * Button names may differ from the names used for the diagram layers. So, a mapping between the user-facing formatted sequence naming and the layers is implemented.
 * Images are sized down to fit in tables. Use the `--image-height` parameter to customize the height.
+* Imagesets can be most image filetypes, and must have their layer information configured in an [imageset CSV](#imageset-CSV).
 * PSD file must have a layer titled, `"BG"`. This will be composited behind all other layers during image generation.
 * PSD file layer names must include short-names. These short-names must be located after a hyphen (-) in the layer name.
   * E.g. the `"s"` in the layer name, `"SHIFT - s"`
   * See also the [image name discussion](#generated-image-names).
+* PSD layers **should** be rasterized, first. They may be vector layers and this may result in empty images being generated. Rasterizing can fix this issue in some cases. Overall, PSD files can be unexpectedly problematic.
 
 ## Generated image names
 
@@ -115,6 +149,12 @@ The files are similar to CSV's. They are formatted and line-oriented:
 | `__separator__`       | One or more quoted strings. Used help break-down, to split up a long button sequence into individual buttons. These individual buttons are then matched against the button patterns, above.                                                                                                                                                      |
 
 A [default button pattern file](qunmk2.patset) is provided for the Qun mk2 synthesizer.
+
+# Imageset CSV
+
+Encode filenames and layer names for all layers matchable in the [button pattern file](#button-pattern-file).
+
+A default [imageset file](qunmk2_imageset.csv) and [directory](imageset) is provided for the Qun mk2 synthesizer.
 
 # Examples
 
@@ -141,11 +181,11 @@ A [default button pattern file](qunmk2.patset) is provided for the Qun mk2 synth
 
 ## Generate images for a Markdown file to the `out` directory
 
-* `python3 __main__.py test.md --psd-out-dir out --psd-file test.psd`
+* `python3 __main__.py test.md psd --psd-out-dir out --psd-file test.psd`
 
 ## Add and update image links with a custom path to a new Markdown file
 
-* `python3 __main.py__ test.md --psd-out-dir custom/image/path --md-out-file out_test_md.md`
+* `python3 __main.py__ test.md psd --psd-out-dir custom/image/path --md-out-file out_test_md.md`
 
 ## Print all found button sequences from a Markdown file
 
@@ -167,7 +207,7 @@ A [default button pattern file](qunmk2.patset) is provided for the Qun mk2 synth
 
 * python 3.10+
 * psd-tools 1.9
-* Pillow - image manipulation
+* pillow - image manipulation
 * mistletoe 1.3 - Markdown parsing
 
 ## Thanks

@@ -4,13 +4,11 @@ import sys
 import mistletoe
 from mistletoe.markdown_renderer import MarkdownRenderer
 
-from constants import HTML_BREAK_PATTERN, HTML_BREAK
+from constants import HTML_BREAK_PATTERN, HTML_BREAK, IMAGE_EXTENSION
 from extract_md import ButtonSequence
 
 # For debugging parsing
 DEBUG_LOG_MODIFY = True
-
-IMAGE_EXTENSION = "png"
 
 
 def format_markdown(markdown_filename):
