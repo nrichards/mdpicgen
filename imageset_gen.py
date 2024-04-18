@@ -10,6 +10,8 @@ from extract_md import SHORT_NAME_INFIX_SEPARATOR
 from util import make_out_dir, size_from_height
 
 DEBUG_LOG_IMAGESET = False
+RESIZE_IMAGE = False
+USE_THREADING_EXPERIMENTAL = False  # Causes truncated image rendering, buggy
 
 
 class ImageSet:
@@ -25,8 +27,11 @@ class ImageSet:
         if DEBUG_LOG_IMAGESET:
             print(f"unique_basenames: {unique_basenames}", file=sys.stderr)
 
-        decent_performance = int(os.cpu_count() * 0.8)
-        pool = concurrent.futures.ThreadPoolExecutor(max_workers=decent_performance)
+        thread_count = 1
+        if USE_THREADING_EXPERIMENTAL:
+            thread_count = int(os.cpu_count() * 0.8)
+
+        pool = concurrent.futures.ThreadPoolExecutor(max_workers=thread_count)
 
         for basename in unique_basenames:
             pool.submit(self.process_image, basename, height, out_dirname)
@@ -98,5 +103,8 @@ class ImageSet:
                 output_image.paste(layer["image"], (layer["x"], layer["y"]))
 
         new_size = size_from_height(height, output_image.size)
-        result = output_image.resize(new_size)
+        if RESIZE_IMAGE:
+            result = output_image.resize(new_size)
+        else:
+            result = output_image
         return result

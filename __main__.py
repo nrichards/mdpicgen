@@ -54,7 +54,9 @@ if __name__ == '__main__':
                                       " (Default: 'imageset')")
 
     parser_psd = subparsers.add_parser("psd",
-                                       help="Read image data from PSD file - depends on Adobe(tm) Photoshop tech")
+                                       help="NOT RECOMMENDED: Read image data from PSD file - "
+                                            "depends on Adobe(tm) Photoshop tech, "
+                                            "slow, incompatibilities between PSD tools yields un")
     parser_psd.add_argument("--psd-file", type=str, help="Input filename for the PSD file", required=True)
 
     args = parser.parse_args()

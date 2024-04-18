@@ -220,19 +220,9 @@ A default [imageset file](qunmk2_imageset.csv) and [directory](imageset) is prov
 
 ## Future
 
-### ~Alternative image sources~
+### ~~Alternative image sources~~
 
 **DONE** imageset support added. 114 times faster than PSD.
-
-old:
-
-"Not fun" bit about this, which I plan to work on:
-
-* Working with Photoshop PSD files is proving problematic due to compatibility issues. Everyone involved in the project does not own a license from Adobe and instead uses their own PSD editor. Also, the Python libraries to extract PSD data have their own issues, following Adobe's out-of-date and wrong specification, plus they are maintained by volunteers who may not have motivation to solve my particular compatibility issues. 
-* **Solution** will be to migrate to 100% Python compositing. Ideas include:
-  * JSON file dictating layout of named button controls
-  * Layout could specify shapes and colors, e.g. "rectangle" and "orange". Shape drawing commands could then render the stylized shapes, and save the final image.
-  * [**preferred**] Or, layout could use pre-built images, and specify location, image-name, and orientation. Drawing commands could render the component images by placement, and then save the final image.
 
 ### Column two, three (etc.) image placements 
 
