@@ -1,6 +1,7 @@
 import re
 import sys
 import os
+import shutil
 
 import mistletoe
 from mistletoe.markdown_renderer import MarkdownRenderer
@@ -18,6 +19,10 @@ def format_markdown(markdown_filename):
 
 
 def write_markdown(md_out_file, image_out_path, md_in_file, button_sequences: [ButtonSequence]):
+    if not button_sequences:
+        shutil.copyfile(md_in_file, md_out_file)
+        return
+
     seqs = iter(button_sequences)
     seq = next(seqs)
 
