@@ -1,5 +1,6 @@
 import re
 import sys
+import os
 
 import mistletoe
 from mistletoe.markdown_renderer import MarkdownRenderer
@@ -8,7 +9,7 @@ from constants import HTML_BREAK_PATTERN, HTML_BREAK, IMAGE_EXTENSION
 from extract_md import ButtonSequence
 
 # For debugging parsing
-DEBUG_LOG_MODIFY = True
+DEBUG_LOG_MODIFY = False
 
 
 def format_markdown(markdown_filename):
@@ -20,6 +21,9 @@ def write_markdown(md_out_file, image_out_path, md_in_file, button_sequences: [B
     seqs = iter(button_sequences)
     seq = next(seqs)
 
+    if os.path.normpath(md_in_file) == os.path.normpath(md_out_file):
+        raise FileExistsError(f"Cannot write to same file that is being read from: \"{md_in_file}\"")
+
     line_count = 0
     with open(md_in_file, "r") as fin:
         with open(md_out_file, "w") as fout:
@@ -29,7 +33,8 @@ def write_markdown(md_out_file, image_out_path, md_in_file, button_sequences: [B
                 out_line = in_line
                 if seq.line_number == line_count:
                     # alter the line
-                    out_line = update_or_replace_image_in_markdown(in_line, f"{image_out_path}/{seq.basename}.{IMAGE_EXTENSION}")
+                    out_line = update_or_replace_image_in_markdown(
+                        in_line, f"{image_out_path}/{seq.basename}.{IMAGE_EXTENSION}")
 
                     # Prepare for the next opportunity to mutate a button sequence
                     try:

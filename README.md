@@ -42,8 +42,9 @@ Image generation data sources:
   {imageset,psd}        Optional subcommands for how to generate images: the
                         source of image data
     imageset            Use a directory of images for the layers
-    psd                 Read image data from PSD file - depends on Adobe(tm)
-                        Photoshop tech
+    psd                 NOT RECOMMENDED: Read image data from PSD file -
+                        depends on Adobe(tm) Photoshop tech, slow,
+                        incompatibilities between PSD tools yields un
 ```
 
 ## imageset
@@ -166,38 +167,45 @@ A default [imageset file](qunmk2_imageset.csv) and [directory](imageset) is prov
    2. Or it will be updated, if already in the doc.
 3. Notice the "B1", "SHIFT", etc are configured in the [patset file](qunmk2.patset).
 
-
 ```markdown
-|               Button               | Description                            |
-|:----------------------------------:|----------------------------------------|
-| B1 + B2 <br> ![](./doc/sample.png) | A button sequence and image            |
-|          SHIFT + B3 <br>           | No image. Will be injected with image. |
-|             SYS + B4               | No br-tag. Won't receive image.        |
+|               Button               | Description                         |
+|:----------------------------------:|-------------------------------------|
+| B1 + B2 <br> ![](./doc/sample.png) | A button sequence and image         |
+|          SHIFT + B3 <br>           | No image. Will injected with image. |
+|              SYS + B4              | No br-tag. Won't receive image.     |
 ```
 
 ## At command line -- show program options, verbosely
 
 * `python3 __main__.py`, or `python3 __main__.py -h`
 
-## Generate images for a Markdown file to the `out` directory
+## Generate images for a Markdown file to the default `out` directory
 
-* `python3 __main__.py test.md psd --psd-out-dir out --psd-file test.psd`
+* `python3 __main__.py --md-file test.md imageset`
 
-## Add and update image links with a custom path to a new Markdown file
+and for the Qun mk2 project:
 
-* `python3 __main.py__ test.md psd --psd-out-dir custom/image/path --md-out-file out_test_md.md`
+* `python3 __main__.py --md-file ../Qun-mk2/README.md --image-out-dir ../Qun-mk2/manual_images/but --image-height 56 imageset --imageset-file qunmk2_imageset.csv --imageset-dir imageset`
+
+## Add and update image links to a new Markdown file
+
+* `python3 __main__.py --md-file test.md --md-out-file out_test_md.md`
+  
+and for the Qun mk2 project:
+
+* `python3 __main__.py --md-file ../Qun-mk2/README.md --md-out-file ../Qun-mk2/README-merge_me.md`
 
 ## Print all found button sequences from a Markdown file
 
-* `python3 __main__.py test.md --print-extract`
+* `python3 __main__.py --md-file test.md --print-extract`
 
 ## Read a custom button pattern file, and find button sequences in a Markdown file
 
-* `python3 __main__.py test.md --print-extract --button-pattern-file custom.patset`
+* `python3 __main__.py --md-file test.md --print-extract --button-pattern-file custom.patset`
 
 ## Utility to format and print a Markdown file
 
-* `python3 __main__.py test.md --print-formatted`
+* `python3 __main__.py --md-file test.md --print-formatted`
 
 # Limitations
 

@@ -11,6 +11,10 @@ if __name__ == '__main__':
     script_dir = os.path.dirname(os.path.realpath(__file__))
 
     # n.b. use Unix command `fold` to format full (-h) usage for pasting into README.md
+    #   python3 ../mdpicgen -h | fold | pbcopy
+    #   python3 ../mdpicgen imageset -h | fold | pbcopy
+    #   python3 ../mdpicgen psd -h | fold | pbcopy
+
     parser = argparse.ArgumentParser(
         description='''Read Markdown and process image layers, generating images and inserting / updating into Markdown.
                     Layer names will be used as keys. 
@@ -62,7 +66,13 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Extract from Markdown
-    button_sequences = extract_button_sequences(args.md_file, args.button_pattern_file)
+    button_sequences = []
+    try:
+        button_sequences = extract_button_sequences(args.md_file, args.button_pattern_file)
+    except Exception as e:
+        print(f"Aborting. Error extracting button sequences: {e}", file=sys.stderr)
+        exit(1)
+
     basenames = [seq.basename for seq in button_sequences]
 
     if args.print_extract:
@@ -77,8 +87,7 @@ if __name__ == '__main__':
         except Exception as e:
             print(f"Aborting. Error processing PSD file: {e}", file=sys.stderr)
             exit(1)
-
-    if args.image_source == 'imageset':
+    elif args.image_source == "imageset":
         try:
             process_imageset(args.image_out_dir, args.imageset_file, args.imageset_dir, basenames, args.image_height)
         except Exception as e:
@@ -86,7 +95,11 @@ if __name__ == '__main__':
             exit(1)
 
     if args.md_out_file:
-        markdown = write_markdown(args.md_out_file, args.image_out_dir, args.md_file, button_sequences)
+        try:
+            markdown = write_markdown(args.md_out_file, args.image_out_dir, args.md_file, button_sequences)
+        except Exception as e:
+            print(f"Aborting. Error writing markdown: {e}", file=sys.stderr)
+            exit(1)
 
     if args.print_formatted:
         formatted_text = format_markdown(args.md_file)

@@ -10,7 +10,7 @@ from extract_md import SHORT_NAME_INFIX_SEPARATOR
 from util import make_out_dir, size_from_height
 
 DEBUG_LOG_IMAGESET = False
-RESIZE_IMAGE = False
+RESIZE_IMAGE = True
 USE_THREADING_EXPERIMENTAL = False  # Causes truncated image rendering, buggy
 
 
