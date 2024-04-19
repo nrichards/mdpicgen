@@ -19,7 +19,7 @@ DEBUG_LOG_EXTRACT = False
 SHORT_NAME_INFIX_SEPARATOR = "_"
 
 # For reading the pattern text file
-PATTERN_FILE_DELIMETER = "="
+PATTERN_FILE_DELIMITER = "="
 TABLE_HEADER_KEY = "__header__"
 SEPARATOR_KEY = "__separator__"
 SEPARATOR_VALUE_WRAPPER = "\""  # just a quote, for later stripping of the quoted string values
@@ -71,6 +71,9 @@ def format_image_basename(button_sequence) -> str:
 
 
 class ButtonSequence:
+    """
+    Container class for button command sequence data
+    """
     sequence_mapping: [{}]
     line_number: int
     basename: str = ""
@@ -87,7 +90,8 @@ class ButtonSequence:
         """
         if button_sequences and type(button_sequences[0]) is not ButtonSequence:
             print(
-                f"error: can't transform extracted mapping to sequence list, unsupported type: {type(button_sequences[0])}")
+                f"error: can't transform extracted mapping to sequence list, "
+                f"unsupported type: {type(button_sequences[0])}")
             return
 
         result = [seq.sequence_mapping for seq in button_sequences]
@@ -113,7 +117,7 @@ class ExtractButtonsFromMarkdown:
         self.header = self.patterns_to_header(button_pattern_file)
 
         with open(markdown_filename, "r") as fin:
-            with MarkdownRenderer(normalize_whitespace=True) as renderer:
+            with MarkdownRenderer(normalize_whitespace=True) as _:
                 document = Document(fin)
 
                 # Extract buttons, following constraints and patterns, and store results
@@ -143,7 +147,8 @@ class ExtractButtonsFromMarkdown:
         result = values[0].strip()
         return result
 
-    def load_constants_from_csv(self, button_pattern_file: str, delimiter=PATTERN_FILE_DELIMETER) -> \
+    @staticmethod
+    def load_constants_from_csv(button_pattern_file: str, delimiter=PATTERN_FILE_DELIMITER) -> \
             {re.Pattern, str}:
         """
         Return a dict of regular expressions and their equivalent string identifiers.
@@ -164,7 +169,8 @@ class ExtractButtonsFromMarkdown:
             constants[kre] = value.strip()
         return constants
 
-    def load_values_from_csv(self, button_pattern_file, find_key, delimiter=PATTERN_FILE_DELIMETER):
+    @staticmethod
+    def load_values_from_csv(button_pattern_file, find_key, delimiter=PATTERN_FILE_DELIMITER):
         result = []
         for row in csv.reader(io.StringIO(button_pattern_file), delimiter=delimiter):
             if row and row[0].startswith(find_key):
@@ -226,7 +232,8 @@ class ExtractButtonsFromMarkdown:
                           + f"cell={cell.children}",
                           file=sys.stderr)
         else:
-            print(f"error: code {os.path.basename(__file__)} is written to require br-tag, please re-code it", file=sys.stderr)
+            print(f"error: code {os.path.basename(__file__)} is written to require br-tag, "
+                  f"please re-code it", file=sys.stderr)
 
         if button_sequence:
             result = ButtonSequence(button_sequence, tablerow.line_number)
@@ -296,5 +303,6 @@ class ExtractButtonsFromMarkdown:
         result = sequence
         return result
 
-    def find_first_non_null_index(self, a_list):
+    @staticmethod
+    def find_first_non_null_index(a_list):
         return next((i for i, x in enumerate(a_list) if x is not None), -1)

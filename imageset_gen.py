@@ -46,7 +46,8 @@ class ImageSet:
         composite_image = self.generate_image(out_dirname, height, components, self.layers)
         composite_image.save(f"{out_dirname}/{basename}.{IMAGE_EXTENSION}", format=IMAGE_EXTENSION.upper())
 
-    def process_basename(self, basename) -> [str]:
+    @staticmethod
+    def process_basename(basename) -> [str]:
         intermediate_components = basename.split(SHORT_NAME_INFIX_SEPARATOR)
 
         components = []
@@ -70,6 +71,7 @@ class ImageSet:
             reader = csv.DictReader(csvfile)
 
             for row in reader:
+                row: dict  # Workaround for https://youtrack.jetbrains.com/issue/PY-60440
                 layer = {
                     "image": self.load_image(f"{imageset_dir}/{row['image_file']}"),
                     "layer_name": row["layer_name"],
@@ -84,10 +86,12 @@ class ImageSet:
 
         return results
 
-    def load_image(self, image_filename):
+    @staticmethod
+    def load_image(image_filename):
         return Image.open(image_filename)
 
-    def generate_image(self, out_dirname, height, components, imageset_layers) -> Image:
+    @staticmethod
+    def generate_image(out_dirname, height, components, imageset_layers) -> Image:
         if DEBUG_LOG_IMAGESET:
             print(f"generating imageset to dir '{out_dirname}'", file=sys.stderr)
 

@@ -54,16 +54,15 @@ class PSDInMd:
         return False
 
     def find_bbox(self):
-        global bbox
         for layer in self.psd.descendants():
             if DEBUG_LOG_PSD:
                 print(layer)
             if BG_LAYER_NAME == layer.name:
-                bbox = layer.bbox
+                self.bbox = layer.bbox
                 break
-        if bbox is None:
+        if self.bbox is None:
             print(f"Warning: Bounding box layer {BG_LAYER_NAME} not found. Output images will be full size.")
-            bbox = self.psd.bbox
+            self.bbox = self.psd.bbox
 
     def process_psd(self, out_dirname, psd_filename, basenames, height):
         """
@@ -117,7 +116,7 @@ class PSDInMd:
         # Always render the background layer.
         components = components + [BG_LAYER_NAME]
         image = self.psd.composite(
-            viewport=bbox,
+            viewport=self.bbox,
             layer_filter=lambda candidate_layer: self.can_find_layer_for_any_shortname(candidate_layer, components))
 
         new_size = size_from_height(height, image.size)

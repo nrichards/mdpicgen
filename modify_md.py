@@ -77,7 +77,7 @@ def update_or_replace_image_in_markdown(line, new_image_path):
         elif column_one:
             # IN: ' ![](img) | desc'
             # OUT: ' ![](new_img)'
-            if re.search( r"^( )?!\[.*?]\(.+?\)[ |]?", segment, re.IGNORECASE):
+            if re.search(r"^( )?!\[.*?]\(.+?\)[ |]?", segment, re.IGNORECASE):
                 modified_line = re.sub(replacement_pattern, fr"![\1]({new_image_path})\3", segment, re.IGNORECASE)
             else:
                 # ... or
