@@ -4,9 +4,8 @@ import sys
 
 from psd_tools import PSDImage
 
-from extract_md import SHORT_NAME_INFIX_SEPARATOR
+from constants import BG_LAYER_NAME, SHORT_NAME_INFIX_SEPARATOR
 from util import make_out_dir, size_from_height
-from constants import BG_LAYER_NAME
 
 # For debugging generating
 DEBUG_LOG_PSD = True

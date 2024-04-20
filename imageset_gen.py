@@ -5,8 +5,7 @@ import sys
 
 from PIL import Image
 
-from constants import BG_LAYER_NAME, IMAGE_EXTENSION
-from extract_md import SHORT_NAME_INFIX_SEPARATOR
+from constants import BG_LAYER_NAME, IMAGE_EXTENSION, SHORT_NAME_INFIX_SEPARATOR
 from util import make_out_dir, size_from_height
 
 DEBUG_LOG_IMAGESET = False

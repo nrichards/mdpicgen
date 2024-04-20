@@ -10,13 +10,10 @@ from mistletoe.block_token import Table, TableRow, Document
 from mistletoe.markdown_renderer import MarkdownRenderer
 from mistletoe.span_token import RawText, HtmlSpan
 
-from constants import HTML_BREAK_PATTERN
+from constants import HTML_BREAK_PATTERN, SHORT_NAME_INFIX_SEPARATOR
 
 # For debugging parsing
 DEBUG_LOG_EXTRACT = False
-
-# For generating image filenames, the separator between alphanumeric chars, e.g. "s_mplay_123"
-SHORT_NAME_INFIX_SEPARATOR = "_"
 
 # For reading the pattern text file
 PATTERN_FILE_DELIMITER = "="

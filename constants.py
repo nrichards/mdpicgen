@@ -8,3 +8,7 @@ HTML_BREAK = "<br>"
 BG_LAYER_NAME: str = "BG"
 
 IMAGE_EXTENSION = "png"
+
+# For generating image filenames, the separator between alphanumeric chars, e.g. "s_mplay_123"
+SHORT_NAME_INFIX_SEPARATOR = "_"
+
