@@ -30,7 +30,7 @@ def extract_button_sequences(md_file, but_pat_file) -> [[]]:
     :param md_file: Markdown file formatted with well-known button sequences in special tables
     :param but_pat_file: Text file mapping regular expressions to buttons, and defining separator patterns
     :return: List of dictionaries mapping recognized button names, as written in the input Markdown, to short names
-    which are used as components of basenames of generated image files illustrating the button sequence
+    which are used as compound layer names in basenames of generated image files illustrating the button sequence
     """
     extractor = ExtractButtonsFromMarkdown(md_file, but_pat_file)
     if DEBUG_LOG_EXTRACT:
