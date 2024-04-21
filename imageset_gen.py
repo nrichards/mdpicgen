@@ -66,21 +66,18 @@ class ImageSet:
         return Image.open(image_filename)
 
     def process_image(self, basename, opt: ImageOpt, out_dirname):
-        components = self.process_basename(basename)
+        components: [] = self.process_basename(basename)
+        image_filename = f"{out_dirname}/{basename}.{opt.extension()}"
 
         if opt.gif:
-            images = []
-            # images = self.gen_anim_images(opt, components, self.layers)
-            # ['BG', '1', '2', '3']
-            # images = images + composite( 'BG' )
-            # images = images + composite( images[-1], '1' )
-            # images = images + composite( images[-1], '2' )
-            # images = images + composite( images[-1], '3' )
-            images[0].save
-            pass
+            images = self.gen_animated_images(components, opt)
+
+            # Save GIF, hold duration at end
+            images[0].save(image_filename, save_all=True, append_images=images[1:], loop=0,
+                           duration=[400] * (len(images) - 1) + [2000])
         else:
             composite_image = self.gen_composite_image(opt, components, self.layers)
-            composite_image.save(f"{out_dirname}/{basename}.{opt.extension()}", format=opt.extension().upper())
+            composite_image.save(image_filename, format=opt.extension().upper())
 
     @staticmethod
     def process_basename(basename) -> [str]:
@@ -101,34 +98,17 @@ class ImageSet:
 
         return results
 
-    # @staticmethod
-    # def gen_anim_images(opt: ImageOpt, components, imageset_layers) -> [Image]:
-    #     # Make the background image, keep a copy of it, resize it and store that into images
-    #     # Make the next image by compositing with the prior, resize
-    #     new_size = size_from_height(opt.height, output_image.size)
-    #     if ENABLE_RESIZE:
-    #         result = output_image.resize(new_size)
-    #     else:
-    #         result = output_image
-    #
-    #     images = []
-    #     for component in components:
-    #         layer = imageset_layers[component]
-    #         if DEBUG_LOG_IMAGESET:
-    #             print(f"collecting layer {component}, layer {layer}", file=sys.stderr)
-    #
-    #
-    #         if not output_image:
-    #             output_image = layer["image"].copy()
-    #         else:
-    #             output_image.alpha_composite(layer["image"], (layer["x"], layer["y"]))
-    #
-    #     new_size = size_from_height(opt.height, output_image.size)
-    #     if ENABLE_RESIZE:
-    #         result = output_image.resize(new_size)
-    #     else:
-    #         result = output_image
-    #     return result
+    def gen_animated_images(self, components, opt):
+        images = []
+        composited_image = None
+        component_layers = [self.layers[component] for component in components]
+
+        for layer in component_layers:
+            composited_image = self.composite_layer(composited_image, layer)
+            resized = self.resize_image(opt, composited_image)
+            images.append(resized)
+
+        return images
 
     @staticmethod
     def gen_composite_image(opt: ImageOpt, components, imageset_layers) -> Image:
@@ -138,11 +118,22 @@ class ImageSet:
             if DEBUG_LOG_IMAGESET:
                 print(f"compositing layer {component}, layer {layer}", file=sys.stderr)
 
-            if not output_image:
-                output_image = layer["image"].copy()
-            else:
-                output_image.alpha_composite(layer["image"], (layer["x"], layer["y"]))
+            output_image = ImageSet.composite_layer(output_image, layer)
 
+        result = ImageSet.resize_image(opt, output_image)
+        return result
+
+    @staticmethod
+    def composite_layer(composite_image, layer) -> Image:
+        if not composite_image:
+            composite_image = layer["image"].copy()
+        else:
+            composite_image.alpha_composite(layer["image"], (layer["x"], layer["y"]))
+
+        return composite_image
+
+    @staticmethod
+    def resize_image(opt, output_image):
         new_size = size_from_height(opt.height, output_image.size)
         if ENABLE_RESIZE:
             result = output_image.resize(new_size)
