@@ -1,7 +1,8 @@
 import sys
 import os
 
-from mdpicgen import (format_markdown, process_psd, process_imageset, extract_button_sequences, write_markdown)
+from mdpicgen import (format_markdown, process_psd, process_imageset, extract_button_sequences, write_markdown,
+                      ImageOpt)
 
 DEBUG_LOG_MAIN = True
 
@@ -35,6 +36,8 @@ if __name__ == '__main__':
 
     parser.add_argument("--image-height", default=48, type=int,
                         help="Scale generated images to height (Default: 48)")
+    parser.add_argument("--image-gif", action='store_true', help="Generate GIF from button sequences "
+                                                                 "(Default: false, use PNG)")
 
     parser.add_argument("--print-formatted", action='store_true',
                         help="Print formatted Input Markdown to stdout")
@@ -83,20 +86,25 @@ if __name__ == '__main__':
 
     if args.image_source == "psd" and args.psd_file:
         try:
+            if args.image_gif:
+                print("Ignoring --image-gif option, unsupported for PSD", file=sys.stderr)
+
             process_psd(args.image_out_dir, args.psd_file, basenames, args.image_height)
         except Exception as e:
             print(f"Aborting. Error processing PSD file: {e}", file=sys.stderr)
             exit(1)
     elif args.image_source == "imageset":
         try:
-            process_imageset(args.image_out_dir, args.imageset_file, args.imageset_dir, basenames, args.image_height)
+            process_imageset(args.image_out_dir, args.imageset_file, args.imageset_dir, basenames,
+                             ImageOpt(height=args.image_height, gif=args.image_gif))
         except Exception as e:
             print(f"Aborting. Error processing imageset: {e}", file=sys.stderr)
             exit(1)
 
     if args.md_out_file:
         try:
-            markdown = write_markdown(args.md_out_file, args.image_out_dir, args.md_file, button_sequences)
+            markdown = write_markdown(args.md_out_file, args.image_out_dir, args.md_file, button_sequences,
+                                      ImageOpt(args.image_height, gif=args.image_gif))
         except Exception as e:
             print(f"Aborting. Error writing markdown: {e}", file=sys.stderr)
             exit(1)
