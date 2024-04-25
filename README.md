@@ -246,7 +246,7 @@ o.png,1,78,631
 
 ## Generate GIF images for a Markdown file to the default `out` directory
 
-* `python3 __main__.py --md-file test.md --gif-image imageset`
+* `python3 __main__.py --md-file test.md --gif imageset`
 
 For this script's `README.md` to output both PNG and GIF to **`doc`**:
 
