@@ -174,7 +174,7 @@ Images are named according to their button sequence, with shortened button names
 
 Button pattern files (`*.patset`) are used to define the matching pattern and the corresponding button's shortened name. 
 
-The files are similar to CSVs. They are formatted and line-oriented:
+The files are similar to CSVs, and use equals (`=`) instead of commas. They are formatted and line-oriented:
 
 | Format                | Description                                                                                                                                                                                                                                                                                                                                      |
 |-----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
