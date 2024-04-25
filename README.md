@@ -123,19 +123,19 @@ _and:_
 
 ## Workflow
 
-1. Add a table with `"Button"` header text ([customizable](#button-pattern-file)) as the first column of a Markdown source document
-2. Add button command sequence text, matching the format of the pattern file in use, to a cell in that table's `"Button"` column
+1. Add a table with [customizable](#button-pattern-file-identifies-images) `"Button"` header text as the first column of a Markdown source document
+2. Add button command sequence text, matching the [format of the pattern file](#button-pattern-file-identifies-images) in use, to a cell in that table's `"Button"` column
 3. Add a `<br>` tag at end of that text, inside the first cell, to mark this button sequence for processing. Repeat as desired.
-4. Run the tool to generate images, and also a new Markdown file
+4. Run the tool to generate a [new Markdown file](#add-and-update-image-links-in-a-new-markdown-file) and [images](#generate-gif-images-for-a-markdown-file-to-the-default-out-directory)
 
 
 ## Markdown goes in
 
-* Tables **MUST** have a first column header name of "`Button`" ([customizable](#button-pattern-file) in `*.patset` file). Non-matching tables will be ignored.
-* Each first-column cell's contents **MUST** be formatted according to the following. Non-matching cells will be ignored. `Button sequence string` `<br>` `![](optional-link-to-image)` - see an [example](#Example) below.
+* Tables **MUST** have a first column header name of "`Button`" ([customizable](#button-pattern-file-identifies-images) in `*.patset` file). Non-matching tables will be ignored.
+* Each first-column cell's contents **MUST** be formatted according to the following. Non-matching cells will be ignored. `Button + Sequence + String` `<br>` `![](optional-link-to-image)` - see an [example](#examples) below.
   * Note that the `<br>` tag is required. 
-  * Note also that the image link is optional. It will be added automatically when there is a properly formatted button sequence and `<br>` tag.
-* Group names of controls in a **button sequence string**, a formatted sequence. E.g. "SHIFT + B1". The separators between elements in the grouped sequences are customizable in the [patset file](#button-pattern-file).
+  * Note also that the _image link is optional_ because it can be added automatically with `--md-out-file` when there is a properly formatted button sequence and `<br>` tag.
+* Group names of controls in a **button sequence string**, a formatted sequence. E.g. "SHIFT + B1". The separators between elements in the grouped sequences are customizable in the [patset file](#button-pattern-file-identifies-images).
   * Internally, the **button sequence string** is parsed to individual button names, e.g. "SHIFT" and "B1"
   * The individual button names are used to extract layers. Then a final image is composited from those layers.
 * Button names may differ from the names used for the diagram layers. So, a mapping between the user-facing formatted sequence naming and the layers is implemented.
@@ -145,19 +145,21 @@ _and:_
 This script employs **sub-commands** to generate images.
 
 * **imageset**, **psd** - input sub-commands
-  * Chooses the source image data: set of images of PNG files, or a single Photoshop PSD file. See the [Usage](#Usage) section for details.
-* Generated images are sized down to fit in tables. Use the `--image-height` parameter to customize the height.
-* Imagesets can be most image filetypes, and must have their layer information configured in an [imageset CSV](#imageset-CSV).
-* PSD file must have a layer titled, `"BG"`. This will be composited behind all other layers during image generation.
-* PSD file layer names must include short-names. These short-names must be located after a hyphen (-) in the layer name.
-  * E.g. the `"s"` in the layer name, `"SHIFT - s"`
-  * See also the [image name discussion](#generated-image-names).
-* PSD layers **should** be rasterized, first. They may be vector layers and this may result in empty images being generated. Rasterizing can fix this issue in some cases. Overall, PSD files can be unexpectedly problematic.
+  * Chooses the source image data: set of images of PNG files, or a single Photoshop PSD file. See the [usage](#imageset-sub-command) section for details.
+* Generated images are sized to fit in tables. Use the `--image-height` [parameter](#markdown-and-high-level-options) to customize the height.
+* Imagesets can be [most image filetypes](https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html), and must have their layer information configured in a [CSV](#imageset-csv-input-gives-visual-layout-and-out-filenames).
+* PSD layers are used
+  * PSD file must have a layer titled, `"BG"`. This will be composited behind all other layers during image generation.
+  * PSD file layer names must include short-names. These short-names must be located after a hyphen (-) in the layer name.
+    * E.g. the `"s"` in the layer name, `"SHIFT - s"`
+    * See also the [image name discussion](#generates-image-names).
+  * PSD layers **should** be rasterized, first. They may be vector layers and this may result in empty images being generated. Rasterizing can fix this issue in some cases. Overall, PSD files can be unexpectedly problematic.
 
 ## Markdown is generated out
 
-* To avoid path conflicts with generated **Image Links** and **Output Images**, it may be simpler to run this script twice -- once to generate Markdown and once to generate images. 
+* Advice to avoid path conflicts with generated **Image Links** and **Output Images** is to simply run this script twice -- once to generate Markdown and once to generate images. 
   * Be mindful when running this script that the image output path included within the generated Markdown's Image Links by the `--md-out-file` option, e.g. `![](./path/to/image.png)` as set with `--image-out-dir`, is the same path data used during generation of images with the `imageset` and `psd` sub-commands. This dual-purpose can be at odds with itself.
+  * This can be done with a single [complex](#update-new-markdown-file-and-generate-images-for-qun-project-in-a-single-run) run.
 
 ## Generates image names
 
@@ -172,11 +174,11 @@ Images are named according to their button sequence, with shortened button names
 
 Button pattern files (`*.patset`) are used to define the matching pattern and the corresponding button's shortened name. 
 
-The files are similar to CSV's. They are formatted and line-oriented:
+The files are similar to CSVs. They are formatted and line-oriented:
 
 | Format                | Description                                                                                                                                                                                                                                                                                                                                      |
 |-----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `^[B]?1$ = 1`         | Button patterns.<br><br>**FORMAT**: [RegEx to match buttons, as written in Markdown] = [Shortened name used to build image filenames]<br>Keys and values separated by an equals (=). <br>Keys are [regular expressions](https://docs.python.org/3/library/re.html). <br>Values are short strings used for [image names](#generated-image-names). |
+| `^[B]?1$ = 1`         | Button patterns.<br><br>**FORMAT**: [RegEx to match buttons, as written in Markdown] = [Shortened name used to build image filenames]<br>Keys and values separated by an equals (=). <br>Keys are [regular expressions](https://docs.python.org/3/library/re.html). <br>Values are short strings used for [image names](#generates-image-names). |
 | `# this is a comment` | (Optional) hash-tag (#) comment lines                                                                                                                                                                                                                                                                                                            |
 | `__header__`          | An unquoted string, used to identify which tables to parse by matching against a table's first column's header text contents.                                                                                                                                                                                                                    |
 | `__separator__`       | One or more quoted strings. Used help break-down, to split up a long button sequence into individual buttons. These individual buttons are then matched against the button patterns, above.                                                                                                                                                      |
@@ -196,7 +198,7 @@ __separator__ = "+"
 
 ## Imageset CSV input gives visual layout and out filenames
 
-Encode filenames and layer names for all layers matchable in the [button pattern file](#button-pattern-file).
+Encode filenames and layer names for all layers matchable in the [button pattern file](#button-pattern-file-identifies-images).
 
 A default [imageset file](qunmk2_imageset.csv) and [directory](imageset) is provided for the Qun mk2 synthesizer.
 
@@ -227,7 +229,7 @@ o.png,1,78,631
 2. Notice the `<br>` tag is used only once
    1. With `--md-out-file`, an image link will be added, if missing.
    2. Or it will be updated, if already in the doc.
-3. Notice the "B1", "SHIFT", etc are configured in the [patset file](qunmk2.patset).
+3. Notice the "B1", "SHIFT", etc. are configured in the [patset file](qunmk2.patset).
 
 ```markdown
 |               Button               | Description                         |
@@ -255,7 +257,7 @@ For this script's `README.md` to output both PNG and GIF to **`doc`**:
 
 * `python3 __main__.py --md-file test.md --md-out-file out_test_md.md`
 
-## Update new Markdown file and generate images for Qun project
+## Update new Markdown file and generate images for Qun project in a single run
 
 Assumes BASH, changes directory for clarity's sake, assumes [Qun repository](https://github.com/raspy135/Qun-mk2) is cloned to `../Qun-mk2`:
 
