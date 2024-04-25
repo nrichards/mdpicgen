@@ -126,7 +126,7 @@ _and:_
 1. Add a table with [customizable](#button-pattern-file-identifies-images) `"Button"` header text as the first column of a Markdown source document
 2. Add button command sequence text, matching the [format of the pattern file](#button-pattern-file-identifies-images) in use, to a cell in that table's `"Button"` column
 3. Add a `<br>` tag at end of that text, inside the first cell, to mark this button sequence for processing. Repeat as desired.
-4. Run the tool to generate a [new Markdown file](#add-and-update-image-links-in-a-new-markdown-file) and [images](#generate-gif-images-for-a-markdown-file-to-the-default-out-directory)
+4. Run the tool to generate a [new Markdown file](#add-and-update-image-links-and-a-new-markdown-file) and [images](#generate-gif-images-for-a-markdown-file-to-the-default-out-directory)
 
 
 ## Markdown goes in
@@ -253,7 +253,7 @@ For this script's `README.md` to output both PNG and GIF to **`doc`**:
 * `python3 . --md-file README.md --image-height 56 --image-out-dir doc imageset`
 * `python3 . --md-file README.md --gif --image-height 56 --image-out-dir doc imageset`
 
-## Add and update image links in a new Markdown file
+## Add and update image links, and a new Markdown file
 
 * `python3 __main__.py --md-file test.md --md-out-file out_test_md.md`
 
