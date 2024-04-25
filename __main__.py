@@ -17,12 +17,11 @@ if __name__ == '__main__':
     #   python3 ../mdpicgen psd -h | fold | pbcopy
 
     parser = argparse.ArgumentParser(
-        description='''Read Markdown and process image layers, generating images and inserting / updating into Markdown.
-                    Layer names will be used as keys. 
-                    They will be matched to formatted key sequences [configurable] found in Markdown tables with 
-                    first columns labelled \"Button\" [also configurable].
-                    Layers will be composited into images according to the sequences and saved. 
-                    Images will linked into Markdown in the second column, after the \"Button\" column.
+        description='''Parse Markdown table cells into recognized sequences of strings, "keys". 
+                    Only matches keys from table columns all identified by patterns in the button-pattern-file.
+                    Inserts and updates links for image files to output Markdown, in the cells after the keys.
+                    Generate images using image layers, named based upon the keys 
+                    -- see sub-commands for image generation details. 
                     ''')
 
     parser.add_argument("--md-file", type=str, help="Input filename for the Markdown file", required=True)
@@ -46,8 +45,8 @@ if __name__ == '__main__':
     # Image sources are mutually exclusive commands with multiple parameters
 
     subparsers = parser.add_subparsers(dest="image_source", required=False,
-                                       title="Image generation data sources",
-                                       help="Optional subcommands for how to generate images: the source of image data")
+                                       title="Image generation sub-commands",
+                                       help="Optional sub-commands for how to generate images: the source of image data")
 
     parser_imageset = subparsers.add_parser("imageset",
                                             help="Use a directory of images for the layers")

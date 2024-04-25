@@ -16,12 +16,11 @@ usage: mdpicgen [-h] --md-file MD_FILE [--md-out-file MD_OUT_FILE]
                 [--print-extract]
                 {imageset,psd} ...
 
-Read Markdown and process image layers, generating images and inserting /
-updating into Markdown. Layer names will be used as keys. They will be matched
-to formatted key sequences [configurable] found in Markdown tables with first
-columns labelled "Button" [also configurable]. Layers will be composited into
-images according to the sequences and saved. Images will linked into Markdown
-in the second column, after the "Button" column.
+Parse Markdown table cells into recognized sequences of strings, "keys". Only
+matches keys from table columns all identified by patterns in the button-
+pattern-file. Inserts and updates links for image files to output Markdown, in
+the cells after the keys. Generate images using image layers, named based upon
+the keys -- see sub-commands for image generation details.
 
 options:
   -h, --help            show this help message and exit
@@ -42,8 +41,8 @@ options:
   --print-formatted     Print formatted Input Markdown to stdout
   --print-extract       Print extracted buttons to stdout
 
-Image generation data sources:
-  {imageset,psd}        Optional subcommands for how to generate images: the
+Image generation sub-commands:
+  {imageset,psd}        Optional sub-commands for how to generate images: the
                         source of image data
     imageset            Use a directory of images for the layers
     psd                 NOT RECOMMENDED: Read image data from PSD file -
