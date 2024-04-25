@@ -154,10 +154,7 @@ class ExtractButtonsFromMarkdown:
         """
         constants = {}
         for row in csv.reader(io.StringIO(button_pattern_file), delimiter=delimiter):
-            if not row:
-                continue
-            if (row[0].startswith(COMMENT_KEY) or row[0].startswith(SEPARATOR_KEY) or
-                    row[0].startswith(TABLE_HEADER_KEY)):
+            if not row or row[0].startswith((COMMENT_KEY, SEPARATOR_KEY, TABLE_HEADER_KEY)):
                 continue
 
             key, value = row
@@ -168,18 +165,21 @@ class ExtractButtonsFromMarkdown:
 
     @staticmethod
     def load_values_from_csv(button_pattern_file, find_key, delimiter=PATTERN_FILE_DELIMITER):
-        result = []
-        for row in csv.reader(io.StringIO(button_pattern_file), delimiter=delimiter):
-            if row and row[0].startswith(find_key):
-                _, value = row
-                result = result + [value.strip().strip(SEPARATOR_VALUE_WRAPPER)]
+        result = [
+            row[1].strip().strip(SEPARATOR_VALUE_WRAPPER)
+            for row in csv.reader(io.StringIO(button_pattern_file), delimiter=delimiter)
+            if row and row[0].startswith(find_key)
+        ]
+
         return result
 
     def extract_document(self, doc) -> [ButtonSequence]:
-        result = []
-        for token in doc.children:
-            if type(token) is Table:
-                result = result + self.extract_table(token)
+        result = [
+            sequence
+            for token in doc.children if type(token) is Table
+            for sequence in self.extract_table(token)
+        ]
+
         return result
 
     def extract_table(self, table: Table) -> [ButtonSequence]:
@@ -195,10 +195,7 @@ class ExtractButtonsFromMarkdown:
 
     def is_button_table(self, table) -> bool:
         label = table.header.children[0].children[0]
-        if type(label) is RawText:
-            if label.content.lower().startswith(self.header.lower()):
-                return True
-        return False
+        return type(label) is RawText and label.content.lower().startswith(self.header.lower())
 
     def extract_tablerow(self, tablerow: TableRow) -> ButtonSequence:
         result = []

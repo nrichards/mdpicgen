@@ -10,7 +10,7 @@ Automates maintenance of Markdown files containing patterend images. Generates f
 usage: mdpicgen [-h] --md-file MD_FILE [--md-out-file MD_OUT_FILE]
                 [--image-out-dir IMAGE_OUT_DIR]
                 [--button-pattern-file BUTTON_PATTERN_FILE]
-                [--image-height IMAGE_HEIGHT] [--print-formatted]
+                [--image-height IMAGE_HEIGHT] [--gif] [--print-formatted]
                 [--print-extract]
                 {imageset,psd} ...
 
@@ -35,6 +35,8 @@ options:
                         'qunmk2.patset')
   --image-height IMAGE_HEIGHT
                         Scale generated images to height (Default: 48)
+  --gif                 Generate GIF from button sequences (Default: false,
+                        use PNG)
   --print-formatted     Print formatted Input Markdown to stdout
   --print-extract       Print extracted buttons to stdout
 
@@ -44,7 +46,8 @@ Image generation data sources:
     imageset            Use a directory of images for the layers
     psd                 NOT RECOMMENDED: Read image data from PSD file -
                         depends on Adobe(tm) Photoshop tech, slow,
-                        incompatibilities between PSD tools yields un
+                        incompatibilities between PSD tools unexpectedly
+                        breaks workflows
 ```
 
 ## imageset
@@ -88,13 +91,19 @@ So updating 60+ structured images and their Markdown links is work worthy of aut
 
 |              Button               | Description |
 |:---------------------------------:|-------------|
-| SHIFT + SEQ PLAY + turn dial <br> | Do thing    |
+| SHIFT + SEQ PLAY + turn dial <br> |             |
 
 **After**:
 
-|                          Button                          | Description |
-|:--------------------------------------------------------:|-------------|
-| SHIFT + SEQ PLAY + turn dial <br> ![](doc/s_splay_d.png) | Do thing    |
+|                          Button                          | Description                                |
+|:--------------------------------------------------------:|--------------------------------------------|
+| SHIFT + SEQ PLAY + turn dial <br> ![](doc/s_splay_d.png) |                                            |
+
+_and:_
+
+|                          Button                          | Description        |
+|:--------------------------------------------------------:|--------------------|
+| SHIFT + SEQ PLAY + turn dial <br> ![](doc/s_splay_d.gif) | The `--gif` option |
 
 * Extract sequences of names of button controls directly from tables in Markdown, based upon patterns from a customizable file
 * Generate images for each sequence, from the layers of a customizable illustration
@@ -111,6 +120,11 @@ So updating 60+ structured images and their Markdown links is work worthy of aut
 
 ## Details
 
+* This script employs **sub-commands**:
+  * 
+
+Markdown
+
 * Tables **MUST** have a first column header name of "`Button`" ([customizable](#button-pattern-file) in `*.patset` file). Non-matching tables will be ignored.
 * Each first-column cell's contents **MUST** be formatted according to the following. Non-matching cells will be ignored. `Button sequence string` `<br>` `![](optional-link-to-image)` - see an [example](#Example) below.
   * Note that the `<br>` tag is required. 
@@ -119,6 +133,9 @@ So updating 60+ structured images and their Markdown links is work worthy of aut
   * Internally, the **button sequence string** is parsed to individual button names, e.g. "SHIFT" and "B1"
   * The individual button names are used to extract layers. Then a final image is composited from those layers.
 * Button names may differ from the names used for the diagram layers. So, a mapping between the user-facing formatted sequence naming and the layers is implemented.
+
+Images
+
 * Images are sized down to fit in tables. Use the `--image-height` parameter to customize the height.
 * Imagesets can be most image filetypes, and must have their layer information configured in an [imageset CSV](#imageset-CSV).
 * PSD file must have a layer titled, `"BG"`. This will be composited behind all other layers during image generation.
@@ -126,6 +143,11 @@ So updating 60+ structured images and their Markdown links is work worthy of aut
   * E.g. the `"s"` in the layer name, `"SHIFT - s"`
   * See also the [image name discussion](#generated-image-names).
 * PSD layers **should** be rasterized, first. They may be vector layers and this may result in empty images being generated. Rasterizing can fix this issue in some cases. Overall, PSD files can be unexpectedly problematic.
+
+Generated Markdown
+
+* To avoid path conflicts with generated **Image Links** and **Output Images**, it may be simpler to run this script twice -- once to generate Markdown and once to generate images. 
+  * Be mindful when running this script that the image output path included within the generated Markdown's Image Links by the `--md-out-file` option, e.g. `![](./path/to/image.png)` as set with `--image-out-dir`, is the same path data used during generation of images with the `imageset` and `psd` sub-commands. This dual-purpose can be at odds with itself.
 
 ## Generated image names
 
@@ -177,23 +199,27 @@ A default [imageset file](qunmk2_imageset.csv) and [directory](imageset) is prov
 
 ## At command line -- show program options, verbosely
 
-* `python3 __main__.py`, or `python3 __main__.py -h`
+* `python3 __main__.py`
+* `python3 __main__.py -h`
 
-## Generate images for a Markdown file to the default `out` directory
+## Generate GIF images for a Markdown file to the default `out` directory
 
-* `python3 __main__.py --md-file test.md imageset`
+* `python3 __main__.py --md-file test.md --gif-image imageset`
 
-and for the Qun mk2 project:
+For this script's `README.md` to output both PNG and GIF to **`doc`**:
 
-* `python3 __main__.py --md-file ../Qun-mk2/README.md --image-out-dir ../Qun-mk2/manual_images/but --image-height 56 imageset --imageset-file qunmk2_imageset.csv --imageset-dir imageset`
+* `python3 . --md-file README.md --image-height 56 --image-out-dir doc imageset`
+* `python3 . --md-file README.md --gif --image-height 56 --image-out-dir doc imageset`
 
-## Add and update image links to a new Markdown file
+## Add and update image links in a new Markdown file
 
 * `python3 __main__.py --md-file test.md --md-out-file out_test_md.md`
-  
-and for the Qun mk2 project:
 
-* `python3 __main__.py --md-file ../Qun-mk2/README.md --md-out-file ../Qun-mk2/README-merge_me.md`
+## Update new Markdown file and generate images for Qun project
+
+Assumes BASH, changes directory for clarity's sake, assumes [Qun repository](https://github.com/raspy135/Qun-mk2) is cloned to `../Qun-mk2`:
+
+* `MDPICGEN=$(PWD) ; cd ../Qun-mk2 ; python3 $MDPICGEN/__main__.py --md-file README.md --md-out-file README-merge_me.md --image-out-dir manual_images/but --image-height 56 imageset --imageset-file $MDPICGEN/qunmk2_imageset.csv --imageset-dir $MDPICGEN/imageset ; cd -`
 
 ## Print all found button sequences from a Markdown file
 
