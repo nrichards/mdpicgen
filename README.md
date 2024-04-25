@@ -6,6 +6,8 @@ Automates maintenance of Markdown files containing patterend images. Generates f
 
 ## Usage
 
+### Markdown and high-level options
+
 ```
 usage: mdpicgen [-h] --md-file MD_FILE [--md-out-file MD_OUT_FILE]
                 [--image-out-dir IMAGE_OUT_DIR]
@@ -50,7 +52,9 @@ Image generation data sources:
                         breaks workflows
 ```
 
-## imageset
+## imageset sub-command
+
+Can be combined with [Markdown](#markdown-and-high-level-options).
 
 ```
 usage: mdpicgen imageset [-h] [--imageset-file IMAGESET_FILE]
@@ -67,7 +71,9 @@ options:
                         '--imageset-file' (Default: 'imageset')
 ```
 
-## psd
+## psd sub-command
+
+Can be combined with [Markdown](#markdown-and-high-level-options).
 
 ```
 usage: mdpicgen psd [-h] --psd-file PSD_FILE
@@ -77,7 +83,7 @@ options:
   --psd-file PSD_FILE  Input filename for the PSD file
 ```
 
-## Origin
+## Inspiration
 
 To help keep Markdown editing fun for projects needing to add many images which are permutations of a source diagram, this tool will do the heavy lifting.
 
@@ -86,6 +92,8 @@ It is designed for the needs of the Qun mk2 synthesizer project's [README.md](ht
 So updating 60+ structured images and their Markdown links is work worthy of automation.
 
 # Features
+
+## Picture is worth 1,000 words
 
 **Before**:
 
@@ -105,25 +113,23 @@ _and:_
 |:--------------------------------------------------------:|--------------------|
 | SHIFT + SEQ PLAY + turn dial <br> ![](doc/s_splay_d.gif) | The `--gif` option |
 
-* Extract sequences of names of button controls directly from tables in Markdown, based upon patterns from a customizable file
-* Generate images for each sequence, from the layers of a customizable illustration
-* Update the original Markdown, and add missing or update outdated image links, without imposing auto-reformatting on potentially hand-edited (dense) tables
+## Just the big abilities
 
-# How to use
+* **Extract sequences of names of button controls** directly from tables in Markdown, based upon patterns from a customizable file
+* **Generate images for each sequence**, from the layers of a customizable illustration
+* **Update the original Markdown**, and add missing or update outdated image links, without imposing auto-reformatting on potentially hand-edited (dense) tables
 
-**Workflow**
+# Details for getting the most out
+
+## Workflow
 
 1. Add a table with `"Button"` header text ([customizable](#button-pattern-file)) as the first column of a Markdown source document
 2. Add button command sequence text, matching the format of the pattern file in use, to a cell in that table's `"Button"` column
 3. Add a `<br>` tag at end of that text, inside the first cell, to mark this button sequence for processing. Repeat as desired.
 4. Run the tool to generate images, and also a new Markdown file
 
-## Details
 
-* This script employs **sub-commands**:
-  * 
-
-Markdown
+## Markdown goes in
 
 * Tables **MUST** have a first column header name of "`Button`" ([customizable](#button-pattern-file) in `*.patset` file). Non-matching tables will be ignored.
 * Each first-column cell's contents **MUST** be formatted according to the following. Non-matching cells will be ignored. `Button sequence string` `<br>` `![](optional-link-to-image)` - see an [example](#Example) below.
@@ -134,9 +140,13 @@ Markdown
   * The individual button names are used to extract layers. Then a final image is composited from those layers.
 * Button names may differ from the names used for the diagram layers. So, a mapping between the user-facing formatted sequence naming and the layers is implemented.
 
-Images
+## Images in and out
 
-* Images are sized down to fit in tables. Use the `--image-height` parameter to customize the height.
+This script employs **sub-commands** to generate images.
+
+* **imageset**, **psd** - input sub-commands
+  * Chooses the source image data: set of images of PNG files, or a single Photoshop PSD file. See the [Usage](#Usage) section for details.
+* Generated images are sized down to fit in tables. Use the `--image-height` parameter to customize the height.
 * Imagesets can be most image filetypes, and must have their layer information configured in an [imageset CSV](#imageset-CSV).
 * PSD file must have a layer titled, `"BG"`. This will be composited behind all other layers during image generation.
 * PSD file layer names must include short-names. These short-names must be located after a hyphen (-) in the layer name.
@@ -144,12 +154,12 @@ Images
   * See also the [image name discussion](#generated-image-names).
 * PSD layers **should** be rasterized, first. They may be vector layers and this may result in empty images being generated. Rasterizing can fix this issue in some cases. Overall, PSD files can be unexpectedly problematic.
 
-Generated Markdown
+## Markdown is generated out
 
 * To avoid path conflicts with generated **Image Links** and **Output Images**, it may be simpler to run this script twice -- once to generate Markdown and once to generate images. 
   * Be mindful when running this script that the image output path included within the generated Markdown's Image Links by the `--md-out-file` option, e.g. `![](./path/to/image.png)` as set with `--image-out-dir`, is the same path data used during generation of images with the `imageset` and `psd` sub-commands. This dual-purpose can be at odds with itself.
 
-## Generated image names
+## Generates image names
 
 Images are named according to their button sequence, with shortened button names.
 
@@ -158,7 +168,7 @@ Images are named according to their button sequence, with shortened button names
 * Sequence of names are concatenated together, with underscores separating the buttons that aren't the number-buttons
   * E.g. "SHIFT+B1+B2" becomes filename `"s_12.png"`
 
-## Button pattern file
+## Button pattern file identifies images
 
 Button pattern files (`*.patset`) are used to define the matching pattern and the corresponding button's shortened name. 
 
@@ -173,11 +183,41 @@ The files are similar to CSV's. They are formatted and line-oriented:
 
 A [default button pattern file](qunmk2.patset) is provided for the Qun mk2 synthesizer.
 
-# Imageset CSV
+### Sample patset
+
+```csv
+__header__ = Button
+__separator__ = "+"
+^SHIFT$ = s
+^[B]?(utton)?[ ]?1[ \-a-zA-Z]*( \(Long press\))?$ = 1
+^(turn)?[ ]?dial[ a-z]*?$ = d
+^NO( \(<\))?[ a-z]*$ = n
+```
+
+## Imageset CSV input gives visual layout and out filenames
 
 Encode filenames and layer names for all layers matchable in the [button pattern file](#button-pattern-file).
 
 A default [imageset file](qunmk2_imageset.csv) and [directory](imageset) is provided for the Qun mk2 synthesizer.
+
+### Sample 
+
+#### CSV
+
+```csv
+image_file,layer_name,x_pos,y_pos,width,height
+bg.png,BG,0,0,1856,1236
+s.png,s,1572,157
+o.png,1,78,631
+```
+
+#### In files 
+```dir
+/imageset
+  /bg.png
+  /s.png
+  /o.png
+```
 
 # Examples
 
