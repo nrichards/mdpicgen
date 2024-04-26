@@ -14,3 +14,10 @@ GIF_IMAGE_EXTENSION = "gif"
 SHORT_NAME_INFIX_SEPARATOR = "_"
 
 THREADS_PER_CPU = 0.8
+
+# For reading the pattern text files
+COMMENT_KEY = "#"
+SEPARATOR_VALUE_WRAPPER = "\""  # just a quote, for later stripping of the quoted string values
+SEPARATOR_KEY = "__separator__"
+TABLE_HEADER_KEY = "__header__"
+PATTERN_FILE_DELIMITER = "="

@@ -289,7 +289,8 @@ Assumes BASH, changes directory for clarity's sake, assumes [Qun repository](htt
 
 * Wow Python, such easy, much functionality
 * Google + Gemini AI for teaching me moar Python and helping me design the tool. 
-  * Details: suggested names for this tool, wrote initial versions of many functions, introduced me to many basic packages + helped me choose 3rd party libraries, gave me sample code for each, suggested high-level project organization, 
+  * Details: suggested names for this tool, wrote initial versions of many functions, introduced me to many basic packages + helped me choose 3rd party libraries, gave me sample code for each, suggested high-level project organization
+* [Nunomo](https://github.com/raspy135) for encouraging a "find the fun" approach to this project
 
 # Development 
 

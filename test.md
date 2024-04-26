@@ -27,6 +27,7 @@
 | 1 + 2 + 3 <br>          | supported                               |
 | 9 + 10 + 11 <br>        | not supported. not recognized buttons.  |
 | SYSTEM + Turn dial <br> | supported. case-insensitive internally. |
+| dorkus <br>             | not supported                           |
 
 ## BASIC SHORTCUTS
 
