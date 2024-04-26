@@ -5,7 +5,7 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-from mistletoe.block_token import Table, TableRow, Document
+from mistletoe.block_token import Table, TableRow, Document, TableCell
 from mistletoe.markdown_renderer import MarkdownRenderer
 from mistletoe.span_token import RawText, HtmlSpan
 
@@ -188,13 +188,11 @@ class ExtractButtonsFromMarkdown:
 
     def extract_table(self, table: Table) -> [ButtonSequence]:
         result = []
+        
         if self.is_button_table(table, self.header.lower()):
-            for element in table.children:
-                extract = self.extract_tablerow(element)
-
-                # wrap subarray
-                if extract:
-                    result = result + [extract]
+            extracted = [self.extract_tablerow(child) for child in table.children]
+            result = [e for e in extracted if e]
+        
         return result
 
     @staticmethod
@@ -206,58 +204,61 @@ class ExtractButtonsFromMarkdown:
         """
         Extracts valid data from cells in first column of table.
          
-        :param tablerow: 
-        :return: 
+        :param tablerow: candidate data needing examination
+        :return: A ButtonSequence object or None if no valid data is found
         """
-        result = []
+        result = None
         cell = tablerow.children[0]
 
-        valid_token, warning = self.validate_table_cell_structure(cell)
+        valid_token, mismatch = self.validate_cell_structure(cell)
 
         if valid_token:
-            button_sequence = self.extract_rawtext(valid_token)
-            result = ButtonSequence(button_sequence, tablerow.line_number)
-        elif warning and DEBUG_LOG_EXTRACT:
-            print(f"ignored cell: {warning}", file=sys.stderr)
+            sequence_map = self.extract_rawtext(valid_token)
+            
+            if sequence_map:
+                result = ButtonSequence(sequence_map, tablerow.line_number)
+        elif mismatch and DEBUG_LOG_EXTRACT:
+            print(f"ignored cell: {mismatch}", file=sys.stderr)
 
         return result
 
     @staticmethod
-    def validate_table_cell_structure(cell) -> (RawText, str):
+    def validate_cell_structure(cell: TableCell) -> (RawText, str):
         """Extract the first token with content. Presumes e.g. "B1 <br> ![](path-to-image)", and extracts "B1". 
         Also supports no-image.
         
         Return: 
-            Tuple: [0] = optional RawText success element, [1] = optional descriptive string warning text
+            Tuple: [0] = optional RawText success element, [1] = optional descriptive string mismatch text
         """
-        warnings = []
+        mismatches = []
 
         has_enough_children = len(cell.children) > 1
-        warnings.append('needs more children') if not has_enough_children else True
+        mismatches.append('needs more children') if not has_enough_children else True
 
         is_first_token_raw_text = len(cell.children) > 0 and type(cell.children[0]) is RawText
-        warnings.append('first token must be raw text') if not is_first_token_raw_text else True
+        mismatches.append('first token must be raw text') if not is_first_token_raw_text else True
 
         has_html_br_tag_as_second_token = \
             (has_enough_children and
              type(cell.children[1]) is HtmlSpan and
              re.match(HTML_BREAK_PATTERN, cell.children[1].content, re.IGNORECASE))
-        warnings.append('second token must be HTML br-tag') if not has_html_br_tag_as_second_token else True
+        mismatches.append('second token must be HTML br-tag') if not has_html_br_tag_as_second_token else True
 
-        if not warnings:
+        if not mismatches:
             result = (cell.children[0], None)
         else:
-            result = (None, ", ".join(warnings) + f": {cell.children}")
+            result = (None, ", ".join(mismatches) + f": {cell.children}")
 
         return result
 
-    def extract_rawtext(self, rawtext):
-        result = self.extract_button_sequence(rawtext.content)
+    def extract_rawtext(self, rawtext) -> [{str: str}]:
+        result = self.extract_valid_sequence_map(rawtext.content)
         return result
 
-    def extract_button_sequence(self, text: str) -> [ButtonSequence]:
+    def extract_valid_sequence_map(self, text: str) -> [{str: str}]:
         """
         Transform a raw text string to a list of valid presentation strings mapped to their encoded names.
+        Discard entire sequence if any element in the sequence is not valid.
 
         Args:
             text: Whitespace padded raw text extracted. Assume this is from a structurally-matching table cell.
@@ -270,35 +271,38 @@ class ExtractButtonsFromMarkdown:
             return = [{'SHIFT': 's'}, {'SEQ PLAY': 'splay'}, {'turn dial': 'd'}]
         """
 
-        # Prepare candidates for filtration and mapping
         candidate_sequence = self.separate_rawtext(text, self.separators)
         validating_patterns = self.button_patterns.keys()
         valid_names = list(self.button_patterns.values())
+        
+        poison, valid_sequence = self.filter_sequence(candidate_sequence, valid_names, validating_patterns)
 
-        # Check each candidate button in the sequence of controls
+        if not poison:
+            result = valid_sequence
+        else:
+            if DEBUG_LOG_EXTRACT:
+                print(f"could not match \"{poison}\", poisoning sequence \"{candidate_sequence}\"", file=sys.stderr)
+            self.could_not_find.append(poison)
+            result = []
+
+        return result
+
+    @staticmethod
+    def filter_sequence(candidate_sequence, valid_names, validating_patterns) -> (str, [str]):
         valid_sequence = []
         poison = None
         for element in candidate_sequence:
-            valid_element = self.match_element(element, valid_names, validating_patterns)
+            valid_element = ExtractButtonsFromMarkdown.match_element(element, valid_names, validating_patterns)
 
             if valid_element:
                 valid_sequence.append(valid_element)
             else:
                 poison = element
                 break
+        return poison, valid_sequence
 
-        # Discard the entire sequence if any of the documented buttons is an unmatched pattern.
-        if poison:
-            if DEBUG_LOG_EXTRACT:
-                print(f"could not match \"{poison}\", poisoning sequence \"{candidate_sequence}\"", file=sys.stderr)
-            self.could_not_find.append(poison)
-            result = []
-        else:
-            result = valid_sequence
-
-        return result
-
-    def match_element(self, element, valid_names, validating_patterns) -> {str: str}:
+    @staticmethod
+    def match_element(element, valid_names, validating_patterns) -> {str: str}:
         # constrain overall result to element's presence in recognized patterns
         match_results = list(map(lambda pattern: pattern.search(element), validating_patterns))
 
@@ -311,7 +315,7 @@ class ExtractButtonsFromMarkdown:
             case 0:
                 pass
             case 1:
-                match_index = self.find_first_non_null_index(match_results)
+                match_index = ExtractButtonsFromMarkdown.find_first_non_null_index(match_results)
                 short_name = valid_names[match_index]
                 result = {element: short_name}
             case _:
@@ -333,9 +337,12 @@ class ExtractButtonsFromMarkdown:
                 separates = separates + element
             sequence = separates
 
-        # Strip whitespace from beginning and end
-        sequence = list(map(str.strip, sequence))
+        sequence = ExtractButtonsFromMarkdown.strip_whitespace(sequence)
         return sequence
+
+    @staticmethod
+    def strip_whitespace(sequence):
+        return list(map(str.strip, sequence))
 
     @staticmethod
     def find_first_non_null_index(a_list):
