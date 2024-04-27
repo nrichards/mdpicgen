@@ -24,46 +24,49 @@ if __name__ == '__main__':
                     -- see sub-commands for image generation details. 
                     ''')
 
-    parser.add_argument("--md-file", type=str, help="Input filename for the Markdown file", required=True)
+    parser.add_argument("--md-file", type=str, help="Input filename for the Markdown file.", required=True)
     parser.add_argument("--md-out-file", type=str,
-                        help="Output filename for Input Markdown with updated image links", )
+                        help="Output filename for Input Markdown with updated image links.")
     parser.add_argument("--image-out-dir", default='out', type=str,
-                        help="Output directory name for composited images, will be created (Default: 'out')")
+                        help="Output directory name for composited images, will be created (Default: 'out').")
 
     parser.add_argument("--button-pattern-file", default=f"{script_dir}/qunmk2.patset", type=str,
-                        help="Pattern filename for matching buttons (Default: 'qunmk2.patset')")
+                        help="Pattern filename for matching buttons (Default: 'qunmk2.patset').")
 
     parser.add_argument("--image-height", default=48, type=int,
-                        help="Scale generated images to height (Default: 48)")
-    parser.add_argument("--gif", action='store_true', help="Generate GIF from button sequences "
-                                                           "(Default: false, use PNG)")
+                        help="Pixel height of generated images, used with sub-commands (Default: 48).")
+    parser.add_argument("--gif", action='store_true', help="Generate GIF from button sequences, "
+                                                           "sets filename extension (Default: false, use PNG).")
 
     parser.add_argument("--print-formatted", action='store_true',
-                        help="Print formatted Input Markdown to stdout")
-    parser.add_argument("--print-extract", action='store_true', help="Print extracted buttons to stdout")
+                        help="Print formatted Markdown (from '--md-file') to the console.")
+    parser.add_argument("--print-extract", action='store_true', help="Print sequences to console.")
 
     # Image sources are mutually exclusive commands with multiple parameters
 
     subparsers = parser.add_subparsers(dest="image_source", required=False,
                                        title="Image generation sub-commands",
-                                       help="Optional sub-commands for how to generate images: the source of image data")
+                                       help="Optional sub-commands for how to generate images: "
+                                            "the source of image data.")
 
     parser_imageset = subparsers.add_parser("imageset",
-                                            help="Use a directory of images for the layers")
+                                            help="Read image data from a directory of images, supports GIF animation "
+                                                 "of button sequences.")
     parser_imageset.add_argument("--imageset-file", type=str,
                                  help="Specifies what image filename will be used for what layer, "
-                                      "and their xy coordinates "
+                                      "and their xy coordinates."
                                       "(Default: 'qunmk2_imageset.csv')",
                                  default='qunmk2_imageset.csv')
     parser_imageset.add_argument("--imageset-dir", type=str, default="imageset",
                                  help="Directory containing images used as layers defined in '--imageset-file'"
-                                      " (Default: 'imageset')")
+                                      " (Default: 'imageset').")
 
     parser_psd = subparsers.add_parser("psd",
-                                       help="NOT RECOMMENDED: Read image data from PSD file - "
+                                       help="NOT RECOMMENDED: Read image data from PSD file. "
                                             "depends on Adobe(tm) Photoshop tech, slow, "
-                                            "incompatibilities between PSD tools unexpectedly breaks workflows")
-    parser_psd.add_argument("--psd-file", type=str, help="Input filename for the PSD file", required=True)
+                                            "incompatibilities between PSD tools unexpectedly breaks workflows, "
+                                            "animation not supported.")
+    parser_psd.add_argument("--psd-file", type=str, help="Input filename for the PSD file.", required=True)
 
     args = parser.parse_args()
 
@@ -78,10 +81,9 @@ if __name__ == '__main__':
     basenames = [seq.basename for seq in button_sequences]
 
     if args.print_extract:
+        print(f"extracted {len(button_sequences)} sequences")
         for seq in button_sequences:
             print(f"{seq.sequence_mapping} => {seq.basename}")
-        if DEBUG_LOG_MAIN:
-            print(f"found: {len(button_sequences)}", file=sys.stderr)
 
     if args.image_source == "psd" and args.psd_file:
         try:

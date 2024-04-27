@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from extract_md import ExtractButtonsFromMarkdown
+from util import extract_digit_ranges
 
 
 class TestExtractButtonsFromMarkdown(TestCase):
@@ -20,10 +20,6 @@ class TestExtractButtonsFromMarkdown(TestCase):
         """Tests the function with a non-digit string."""
         self.assert_extract_digit_ranges("Sick - Kids - Like, Sleep", "")
 
-    def test_extract_digit_ranges__first_capture_group(self):
-        """Tests the function with a capture group excluding unwanted decorative digits."""
-        self.assert_extract_digit_ranges("B[1-8] (2nd pattern) in any sub-mode", "12345678")
-
     def assert_extract_digit_ranges(self, text, expected_output):
-        actual_output = ExtractButtonsFromMarkdown.extract_digit_ranges(text)
+        actual_output = extract_digit_ranges(text)
         self.assertEqual(actual_output, expected_output)

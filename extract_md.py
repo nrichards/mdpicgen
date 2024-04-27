@@ -1,17 +1,15 @@
-import csv
-import io
 import re
 import sys
 from collections import Counter
-from pathlib import Path
 
 from mistletoe.block_token import Table, TableRow, Document, TableCell
 from mistletoe.markdown_renderer import MarkdownRenderer
 from mistletoe.span_token import RawText, HtmlSpan
 
 from button_sequence import ButtonSequence
-from constants import HTML_BREAK_PATTERN, COMMENT_KEY, SEPARATOR_VALUE_WRAPPER, \
-    SEPARATOR_KEY, TABLE_HEADER_KEY, PATTERN_FILE_DELIMITER, DIGITS_MACRO_NAME
+from constants import HTML_BREAK_PATTERN, DIGITS_MACRO_NAME
+from util import extract_digit_ranges, strip_whitespace, find_first_non_null_index
+from patset import patterns_to_header, patterns_to_separators, patterns_map_to_button_name
 
 # For debugging parsing
 DEBUG_LOG_EXTRACT = True
@@ -50,9 +48,9 @@ class ExtractButtonsFromMarkdown:
     require_br_tag = True  # "SHIFT + SEQ PLAY + turn dial <br> ..." -- default constraint
 
     def __init__(self, markdown_filename, button_pattern_file):
-        self.button_patterns = self.patterns_map_to_button_name(button_pattern_file)
-        self.separators = self.patterns_to_separators(button_pattern_file)
-        self.header = self.patterns_to_header(button_pattern_file)
+        self.button_patterns = patterns_map_to_button_name(button_pattern_file)
+        self.separators = patterns_to_separators(button_pattern_file)
+        self.header = patterns_to_header(button_pattern_file)
 
         with open(markdown_filename, "r") as fin:
             with MarkdownRenderer(normalize_whitespace=True) as _:
@@ -62,60 +60,6 @@ class ExtractButtonsFromMarkdown:
                 result = self.extract_document(document)
                 self.button_sequences = result
                 self.buttons = ButtonSequence.to_sequence_mapping_list(self.button_sequences)
-
-    @staticmethod
-    def patterns_map_to_button_name(button_pattern_file) -> {str, str}:
-        """
-        String patterns of button control found in a document,
-        and their canonical names.
-        Patterns use regular expressions.
-        Case-insensitive, specially handled elsewhere by code.
-        Equals (=) separates the word and its value. See BUTTON_PATTERN_DELIMITER.
-        """
-        pattern_to_canonical_button_name = Path(button_pattern_file).read_text()
-
-        return ExtractButtonsFromMarkdown.load_constants_from_csv(pattern_to_canonical_button_name)
-
-    @staticmethod
-    def patterns_to_separators(button_pattern_file) -> [str]:
-        button_pattern_data = Path(button_pattern_file).read_text()
-        return ExtractButtonsFromMarkdown.load_values_from_csv(button_pattern_data, SEPARATOR_KEY)
-
-    @staticmethod
-    def patterns_to_header(button_pattern_file):
-        button_pattern_data = Path(button_pattern_file).read_text()
-        values = ExtractButtonsFromMarkdown.load_values_from_csv(button_pattern_data, TABLE_HEADER_KEY)
-        result = values[0].strip()
-        return result
-
-    @staticmethod
-    def load_constants_from_csv(button_pattern_file: str, delimiter=PATTERN_FILE_DELIMITER) -> \
-            {re.Pattern, str}:
-        """
-        Return a dict of regular expressions and their equivalent string identifiers.
-
-        To be used to match button names to short-form, well-known button identifiers.
-        """
-        constants = {}
-        for row in csv.reader(io.StringIO(button_pattern_file), delimiter=delimiter):
-            if not row or row[0].startswith((COMMENT_KEY, SEPARATOR_KEY, TABLE_HEADER_KEY)):
-                continue
-
-            key, value = row
-            ks = key.strip()
-            kre = re.compile(ks, re.IGNORECASE)
-            constants[kre] = value.strip()
-        return constants
-
-    @staticmethod
-    def load_values_from_csv(button_pattern_file, find_key, delimiter=PATTERN_FILE_DELIMITER):
-        result = [
-            row[1].strip().strip(SEPARATOR_VALUE_WRAPPER)
-            for row in csv.reader(io.StringIO(button_pattern_file), delimiter=delimiter)
-            if row and row[0].startswith(find_key)
-        ]
-
-        return result
 
     def extract_document(self, doc: Document) -> [ButtonSequence]:
         """
@@ -134,7 +78,7 @@ class ExtractButtonsFromMarkdown:
     def extract_table(self, table: Table) -> [ButtonSequence]:
         result = []
 
-        if self.is_button_table(table, self.header.lower()):
+        if ExtractButtonsFromMarkdown.is_button_table(table, self.header.lower()):
             extracted = [self.extract_tablerow(child) for child in table.children]
             result = [e for e in extracted if e]
 
@@ -260,11 +204,11 @@ class ExtractButtonsFromMarkdown:
             case 0:
                 pass
             case 1:
-                match_index = ExtractButtonsFromMarkdown.find_first_non_null_index(match_results)
-                
+                match_index = find_first_non_null_index(match_results)
+
                 pattern_match = match_results[match_index]
                 element_group = ExtractButtonsFromMarkdown.get_capture_group(element, pattern_match)
-                
+
                 short_name = valid_names[match_index]
                 macro_expanded = ExtractButtonsFromMarkdown.macro_expand_short_name(element_group, short_name)
                 result = {element: macro_expanded}
@@ -296,16 +240,8 @@ class ExtractButtonsFromMarkdown:
                 separates = separates + element
             sequence = separates
 
-        sequence = ExtractButtonsFromMarkdown.strip_whitespace(sequence)
+        sequence = strip_whitespace(sequence)
         return sequence
-
-    @staticmethod
-    def strip_whitespace(sequence):
-        return list(map(str.strip, sequence))
-
-    @staticmethod
-    def find_first_non_null_index(a_list):
-        return next((i for i, x in enumerate(a_list) if x is not None), -1)
 
     @staticmethod
     def macro_expand_short_name(element, short_name) -> str:
@@ -314,45 +250,9 @@ class ExtractButtonsFromMarkdown:
         temp = short_name
 
         if DIGITS_MACRO_NAME in temp:
-            replacement = ExtractButtonsFromMarkdown.extract_digit_ranges(element)
+            replacement = extract_digit_ranges(element)
             temp = temp.replace(DIGITS_MACRO_NAME, replacement)
 
         result = temp
         return result
-
-    @staticmethod
-    def extract_digit_ranges(text):
-        """Extract positively incrementing ranges separated by hyphens, and other digits.
-        
-        Example: [1-3, 7,8] => 12378
-        
-        See: test_extract_md.py
-        """
-        extracted = []
-        start_digit = None
-        last_digit = None
-        # E.g. "[1-3, 7,8]"
-        for char in text:
-            # If this is a digit: "1-3, 7,8]" or "3, 7,8]" or "7,8]" or 8]"
-            if char.isdigit():
-                digit = int(char)
-                # If we are in a range: "3, 7,8]"
-                if start_digit is not None:
-                    end_digit = digit
-                    # Add digit to result, including preceding digits in range, excepting the start digit
-                    extracted.extend(range(start_digit + 1, end_digit + 1))
-                    # No longer in a range
-                    start_digit = None
-                else:
-                    # Add digit to result: "1-3, 7,8]" or "7,8]" or 8]"
-                    extracted.append(digit)
-                last_digit = digit
-            # If we are starting a range: "-3, 7,8]"
-            elif char == '-' and last_digit is not None:
-                start_digit = last_digit
-            # If we are breaking a range
-            else:
-                start_digit = None
-        # Convert to string
-        result = "".join([str(x) for x in extracted]) 
-        return result
+    

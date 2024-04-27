@@ -3,7 +3,7 @@ from util import format_image_basename
 
 class ButtonSequence:
     """
-    Containers button command sequence data.
+    Button command sequence data: full text, layer names, composite filename, and origin.
     """
     sequence_mapping: [{}]
     line_number: int

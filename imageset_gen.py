@@ -29,8 +29,7 @@ class ImageSet:
                 self.process_image(out_dirname, sequence, opt)
                 processed_basenames.add(basename)
     
-        if DEBUG_LOG_IMAGESET:
-            print(f"composited: {len(processed_basenames)}", file=sys.stderr)
+        print(f"composited {len(processed_basenames)} images")
 
     def load_imageset(self, csv_file, imageset_dir) -> {}:
         results = {}

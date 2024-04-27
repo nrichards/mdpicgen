@@ -24,31 +24,34 @@ the keys -- see sub-commands for image generation details.
 
 options:
   -h, --help            show this help message and exit
-  --md-file MD_FILE     Input filename for the Markdown file
+  --md-file MD_FILE     Input filename for the Markdown file.
   --md-out-file MD_OUT_FILE
                         Output filename for Input Markdown with updated image
-                        links
+                        links.
   --image-out-dir IMAGE_OUT_DIR
                         Output directory name for composited images, will be
-                        created (Default: 'out')
+                        created (Default: 'out').
   --button-pattern-file BUTTON_PATTERN_FILE
                         Pattern filename for matching buttons (Default:
-                        'qunmk2.patset')
+                        'qunmk2.patset').
   --image-height IMAGE_HEIGHT
-                        Scale generated images to height (Default: 48)
-  --gif                 Generate GIF from button sequences (Default: false,
-                        use PNG)
-  --print-formatted     Print formatted Input Markdown to stdout
-  --print-extract       Print extracted buttons to stdout
+                        Pixel height of generated images, used with sub-
+                        commands (Default: 48).
+  --gif                 Generate GIF from button sequences, sets filename
+                        extension (Default: false, use PNG).
+  --print-formatted     Print formatted Markdown (from '--md-file') to the
+                        console.
+  --print-extract       Print sequences to console.
 
 Image generation sub-commands:
   {imageset,psd}        Optional sub-commands for how to generate images: the
-                        source of image data
-    imageset            Use a directory of images for the layers
-    psd                 NOT RECOMMENDED: Read image data from PSD file -
+                        source of image data.
+    imageset            Read image data from a directory of images, supports
+                        GIF animation of button sequences.
+    psd                 NOT RECOMMENDED: Read image data from PSD file.
                         depends on Adobe(tm) Photoshop tech, slow,
                         incompatibilities between PSD tools unexpectedly
-                        breaks workflows
+                        breaks workflows, animation not supported.
 ```
 
 ## imageset sub-command
@@ -63,11 +66,11 @@ options:
   -h, --help            show this help message and exit
   --imageset-file IMAGESET_FILE
                         Specifies what image filename will be used for what
-                        layer, and their xy coordinates (Default:
+                        layer, and their xy coordinates.(Default:
                         'qunmk2_imageset.csv')
   --imageset-dir IMAGESET_DIR
                         Directory containing images used as layers defined in
-                        '--imageset-file' (Default: 'imageset')
+                        '--imageset-file' (Default: 'imageset').
 ```
 
 ## psd sub-command
@@ -79,7 +82,7 @@ usage: mdpicgen psd [-h] --psd-file PSD_FILE
 
 options:
   -h, --help           show this help message and exit
-  --psd-file PSD_FILE  Input filename for the PSD file
+  --psd-file PSD_FILE  Input filename for the PSD file.
 ```
 
 ## Inspiration
