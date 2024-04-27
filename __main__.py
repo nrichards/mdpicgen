@@ -94,7 +94,7 @@ if __name__ == '__main__':
             exit(1)
     elif args.image_source == "imageset":
         try:
-            process_imageset(args.image_out_dir, args.imageset_file, args.imageset_dir, basenames,
+            process_imageset(args.image_out_dir, args.imageset_file, args.imageset_dir, button_sequences,
                              ImageOpt(height=args.image_height, gif=args.gif))
         except Exception as e:
             print(f"Aborting. Error processing imageset: {e}", file=sys.stderr)

@@ -14,21 +14,22 @@ USE_THREADING_EXPERIMENTAL = False  # Causes truncated image rendering, buggy
 class ImageSet:
     layers = {str: {}}
 
-    def process_imageset(self, out_dirname, imageset_filename, imageset_dir, basenames, opt: ImageOpt):
+    def process_imageset(self, out_dirname, imageset_filename, imageset_dir, button_sequences, opt: ImageOpt):
         self.layers = self.load_imageset(imageset_filename, imageset_dir)
 
         make_out_dir(out_dirname)
 
         # Avoid redundant image generation
-        unique_basenames = list(set(basenames))
+        processed_basenames = set()
+        for sequence in button_sequences:
+            basename = sequence.basename
+            
+            if basename not in processed_basenames:
+                self.process_image(out_dirname, sequence, opt)
+                processed_basenames.add(basename)
+    
         if DEBUG_LOG_IMAGESET:
-            print(f"unique_basenames: {unique_basenames}", file=sys.stderr)
-
-        for basename in unique_basenames:
-            self.process_image(basename, opt, out_dirname)
-
-        if DEBUG_LOG_IMAGESET:
-            print(f"composited: {len(unique_basenames)}", file=sys.stderr)
+            print(f"composited: {len(processed_basenames)}", file=sys.stderr)
 
     def load_imageset(self, csv_file, imageset_dir) -> {}:
         results = {}
@@ -55,17 +56,27 @@ class ImageSet:
     def load_image(image_filename):
         return Image.open(image_filename)
 
-    def process_image(self, basename, opt: ImageOpt, out_dirname):
-        layer_names: [] = self.process_basename(basename)
+    def process_image(self, out_dirname, sequence, opt: ImageOpt):
+       
+        
+        
+        # TODO: Group sequence of digit layers from same sequence together
+        # TODO: Extend duration of button press for sequences marked "Long press". (Return duration list along with images.)
+        # TODO: Flash On-Off-On for repeat patterns in a sequence
+
+
+        basename = sequence.basename
         image_filename = f"{out_dirname}/{basename}.{opt.extension()}"
 
         if opt.gif:
-            images = self.gen_animated_images(layer_names, opt)
+            images = self.gen_animated_images(sequence, opt)
 
             # Save GIF, hold duration at end
             images[0].save(image_filename, save_all=True, append_images=images[1:], loop=0,
                            duration=[400] * (len(images) - 1) + [2000])
         else:
+            # PNG
+            layer_names: [] = self.process_basename(basename)
             composite_image = self.gen_composite_image(opt, layer_names, self.layers)
             composite_image.save(image_filename, format=opt.extension().upper())
 
@@ -87,9 +98,11 @@ class ImageSet:
 
         return results
 
-    def gen_animated_images(self, layer_names, opt):
+    def gen_animated_images(self, sequence, opt):
         images = []
         composited_image = None
+        
+        layer_names: [] = self.process_basename(sequence.basename)
         image_layers = [self.layers[layer_name] for layer_name in layer_names]
 
         for layer in image_layers:

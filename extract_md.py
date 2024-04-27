@@ -41,25 +41,10 @@ def format_image_basename(button_sequence) -> str:
         Input: [{'MODE PLAY (RECALL)': 'mplay'}, {'B[1-8]': '12345678'}, {'turn dial': 'dial'}]
         Output: 'mplay_12345678_d'
 
-    Uses separator character (_) between buttons, excepting the numbered buttons.
-    Numbered buttons will be run together without separator characters.
+    Uses separator character (_) between buttons, 
+    except for commands with multiple-choice numbered buttons.
     """
-    result = ""
-    last_is_digit = False
-    for bmap in button_sequence:
-        _, value = list(bmap.items())[0]
-
-        curr_isdigit = value.isdigit()
-
-        # Insert a separator character between prior and current button short-names
-        # unless both names are digits.
-        if len(result) and not (last_is_digit and curr_isdigit):
-            result = result + SHORT_NAME_INFIX_SEPARATOR
-
-        result = result + value
-
-        last_is_digit = curr_isdigit
-    return result
+    return SHORT_NAME_INFIX_SEPARATOR.join([list(command.values())[0] for command in button_sequence])
 
 
 class ButtonSequence:
