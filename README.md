@@ -4,9 +4,45 @@ Helps keep Markdown editing fun.
 
 Automates maintenance of Markdown files containing patterend images. Generates from, and inserts or updates images into a Markdown.
 
-## Usage
+## Inspiration
 
-### Markdown and high-level options
+To help keep Markdown editing fun for projects needing to add many images which are permutations of a source diagram, this tool will do the heavy lifting.
+
+It is designed for the needs of the Qun mk2 synthesizer project's [README.md](https://github.com/raspy135/Qun-mk2) guide documentation, originally. Adding images to the guide provides helpful visualizations to teach synthesizer control combinations. Users may refer to pictures in order to activate features on the synthesizer, in addition to text. There are many combinations available with the Qun, and many images to generate, consequently.
+
+So updating 60+ structured images and their Markdown links is work worthy of automation.
+
+## Features
+
+### Picture is worth 1,000 words
+
+**Before**:
+
+|              Button               | Description |
+|:---------------------------------:|-------------|
+| SHIFT + SEQ PLAY + turn dial <br> |             |
+
+**After**, adds images:
+
+|                          Button                          | Description                                |
+|:--------------------------------------------------------:|--------------------------------------------|
+| SHIFT + SEQ PLAY + turn dial <br> ![](doc/s_splay_d.png) |                                            |
+
+_**and** can make animated GIFs:_
+
+|                          Button                          | Description        |
+|:--------------------------------------------------------:|--------------------|
+| SHIFT + SEQ PLAY + turn dial <br> ![](doc/s_splay_d.gif) | The `--gif` option |
+
+### Just the big abilities
+
+* **Extract sequences of names of button controls** directly from tables in Markdown, based upon patterns from a customizable file
+* **Generate images for each sequence**, from the layers of a customizable illustration
+* **Update the original Markdown**, and add missing or update outdated image links, without imposing auto-reformatting on potentially hand-edited (dense) tables
+
+# Usage
+
+## Markdown and high-level options
 
 ```
 usage: mdpicgen [-h] --md-file MD_FILE [--md-out-file MD_OUT_FILE]
@@ -84,42 +120,6 @@ options:
   -h, --help           show this help message and exit
   --psd-file PSD_FILE  Input filename for the PSD file.
 ```
-
-## Inspiration
-
-To help keep Markdown editing fun for projects needing to add many images which are permutations of a source diagram, this tool will do the heavy lifting.
-
-It is designed for the needs of the Qun mk2 synthesizer project's [README.md](https://github.com/raspy135/Qun-mk2) guide documentation, originally. Adding images to the guide provides helpful visualizations to teach synthesizer control combinations. Users may refer to pictures in order to activate features on the synthesizer, in addition to text. There are many combinations available with the Qun, and many images to generate, consequently.
-
-So updating 60+ structured images and their Markdown links is work worthy of automation.
-
-# Features
-
-## Picture is worth 1,000 words
-
-**Before**:
-
-|              Button               | Description |
-|:---------------------------------:|-------------|
-| SHIFT + SEQ PLAY + turn dial <br> |             |
-
-**After**:
-
-|                          Button                          | Description                                |
-|:--------------------------------------------------------:|--------------------------------------------|
-| SHIFT + SEQ PLAY + turn dial <br> ![](doc/s_splay_d.png) |                                            |
-
-_and:_
-
-|                          Button                          | Description        |
-|:--------------------------------------------------------:|--------------------|
-| SHIFT + SEQ PLAY + turn dial <br> ![](doc/s_splay_d.gif) | The `--gif` option |
-
-## Just the big abilities
-
-* **Extract sequences of names of button controls** directly from tables in Markdown, based upon patterns from a customizable file
-* **Generate images for each sequence**, from the layers of a customizable illustration
-* **Update the original Markdown**, and add missing or update outdated image links, without imposing auto-reformatting on potentially hand-edited (dense) tables
 
 # Details for getting the most out
 
@@ -309,20 +309,14 @@ Assumes BASH, changes directory for clarity's sake, assumes [Qun repository](htt
   * Details: suggested names for this tool, wrote initial versions of many functions, introduced me to many basic packages + helped me choose 3rd party libraries, gave me sample code for each, suggested high-level project organization
 * [Nunomo](https://github.com/raspy135) for encouraging a "find the fun" approach to this project
 
-# Development 
+# Future 
 
-## Future
-
-### ~~Alternative image sources~~
-
-**DONE** imageset support added. 114 times faster than PSD.
-
-### Column two, three (etc.) image placements 
+## Column two, three (etc.) image placements 
 
 Currently, column one is the only column for image extraction and placement. Markdown tables can be written with, or without boundary edge markers (|), which complicates parsing.
 * **Solution**: Support arbitrary columns by leveraging [mistletoe](#requirements) to first format and normalize Markdown tables in-memory, then I may rely upon a regular table row boundary pattern and make changes, leveraging that and the non-whitespace elements to inject / update image links, preserving the original non-auto-formatted Markdown's look
 
-### Animated GIFs and more: press-duration visualization of buttons
+## Animated GIFs and more: press-duration visualization of buttons
 
 * Currently, a static PNG is generated illustrating the original Markdown documentation's chord of buttons needing pressing e.g. to initiate a feature. Occasionally button presses requre holding for a longer duration than just a moment, and there is no way to represent this with a static image.
 * **Idea**:
