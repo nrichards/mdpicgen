@@ -171,9 +171,9 @@ Images are named according to their button sequence, with shortened button names
 
 ## Button pattern file identifies images
 
-Button pattern files (`*.patset`) are used to define the matching pattern and the corresponding button's shortened name. 
+Button pattern files (`*.patset`) match button sequences, and individual buttons. They define the output image filenames with substrings that map to each individual button in the sequence.
 
-The files are similar to CSVs, and use equals (`=`) instead of commas. They are formatted and line-oriented:
+The files are structured similar to CSVs, and use equals (`=`) instead of commas. They are formatted and line-oriented:
 
 | Format                | Description                                                                                                                                                                                                                                                                                                                                                                                                                          |
 |-----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
