@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from constants import GIF_IMAGE_EXTENSION, PNG_IMAGE_EXTENSION
+from constants import GIF_IMAGE_EXTENSION, PNG_IMAGE_EXTENSION, SHORT_NAME_INFIX_SEPARATOR
 
 
 def make_out_dir(out_dirname):
@@ -30,3 +30,17 @@ class ImageOpt:
             return GIF_IMAGE_EXTENSION
         else:
             return PNG_IMAGE_EXTENSION
+
+
+def format_image_basename(button_sequence) -> str:
+    """
+    Creates a basename suitable for representing a button sequence.
+    
+    Example:
+        Input: [{'MODE PLAY (RECALL)': 'mplay'}, {'B[1-8]': '12345678'}, {'turn dial': 'dial'}]
+        Output: 'mplay_12345678_d'
+
+    Uses separator character (_) between buttons, 
+    except for commands with multiple-choice numbered buttons.
+    """
+    return SHORT_NAME_INFIX_SEPARATOR.join([list(command.values())[0] for command in button_sequence])

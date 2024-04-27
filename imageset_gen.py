@@ -5,6 +5,7 @@ from PIL import Image
 
 from constants import BG_LAYER_NAME, SHORT_NAME_INFIX_SEPARATOR
 from util import make_out_dir, size_from_height, ImageOpt
+from button_sequence import ButtonSequence
 
 DEBUG_LOG_IMAGESET = True
 ENABLE_RESIZE = True
@@ -98,9 +99,11 @@ class ImageSet:
 
         return results
 
-    def gen_animated_images(self, sequence, opt):
+    def gen_animated_images(self, sequence:ButtonSequence, opt):
         images = []
         composited_image = None
+        
+        # TODO: Sub-composite in order to simultaneously render multiple layers then remove them
         
         layer_names: [] = self.process_basename(sequence.basename)
         image_layers = [self.layers[layer_name] for layer_name in layer_names]

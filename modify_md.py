@@ -7,7 +7,7 @@ import mistletoe
 from mistletoe.markdown_renderer import MarkdownRenderer
 
 from constants import HTML_BREAK_PATTERN, HTML_BREAK
-from extract_md import ButtonSequence
+from button_sequence import ButtonSequence
 from util import ImageOpt
 
 # For debugging parsing

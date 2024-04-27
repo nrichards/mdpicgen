@@ -9,7 +9,8 @@ from mistletoe.block_token import Table, TableRow, Document, TableCell
 from mistletoe.markdown_renderer import MarkdownRenderer
 from mistletoe.span_token import RawText, HtmlSpan
 
-from constants import HTML_BREAK_PATTERN, SHORT_NAME_INFIX_SEPARATOR, COMMENT_KEY, SEPARATOR_VALUE_WRAPPER, \
+from button_sequence import ButtonSequence
+from constants import HTML_BREAK_PATTERN, COMMENT_KEY, SEPARATOR_VALUE_WRAPPER, \
     SEPARATOR_KEY, TABLE_HEADER_KEY, PATTERN_FILE_DELIMITER, DIGITS_MACRO_NAME
 
 # For debugging parsing
@@ -31,49 +32,6 @@ def extract_button_sequences(md_file, but_pat_file) -> ["ButtonSequence"]:
     if DEBUG_LOG_EXTRACT:
         print(f"rejected: {len(extractor.could_not_find)}", file=sys.stderr)
     return extractor.button_sequences
-
-
-def format_image_basename(button_sequence) -> str:
-    """
-    Creates a basename suitable for representing a button sequence.
-    
-    Example:
-        Input: [{'MODE PLAY (RECALL)': 'mplay'}, {'B[1-8]': '12345678'}, {'turn dial': 'dial'}]
-        Output: 'mplay_12345678_d'
-
-    Uses separator character (_) between buttons, 
-    except for commands with multiple-choice numbered buttons.
-    """
-    return SHORT_NAME_INFIX_SEPARATOR.join([list(command.values())[0] for command in button_sequence])
-
-
-class ButtonSequence:
-    """
-    Containers button command sequence data.
-    """
-    sequence_mapping: [{}]
-    line_number: int
-    basename: str = ""
-
-    def __init__(self, mapping, line_no):
-        self.sequence_mapping = mapping
-        self.line_number = line_no
-        self.basename = format_image_basename(self.sequence_mapping)
-
-    @staticmethod
-    def to_sequence_mapping_list(button_sequences: ["ButtonSequence"]):
-        """
-        Extracts a list of button sequence strings, mapping to shortnames, from an input list of ButtonSequences.
-        """
-        if button_sequences and type(button_sequences[0]) is not ButtonSequence:
-            print(
-                f"error: can't transform extracted mapping to sequence list, "
-                f"unsupported type: {type(button_sequences[0])}")
-            return
-
-        result = [seq.sequence_mapping for seq in button_sequences]
-
-        return result
 
 
 class ExtractButtonsFromMarkdown:
