@@ -21,3 +21,4 @@ SEPARATOR_VALUE_WRAPPER = "\""  # just a quote, for later stripping of the quote
 SEPARATOR_KEY = "__separator__"
 TABLE_HEADER_KEY = "__header__"
 PATTERN_FILE_DELIMITER = "="
+DIGITS_MACRO_NAME = "%digits%"

@@ -10,7 +10,7 @@ from mistletoe.markdown_renderer import MarkdownRenderer
 from mistletoe.span_token import RawText, HtmlSpan
 
 from constants import HTML_BREAK_PATTERN, SHORT_NAME_INFIX_SEPARATOR, COMMENT_KEY, SEPARATOR_VALUE_WRAPPER, \
-    SEPARATOR_KEY, TABLE_HEADER_KEY, PATTERN_FILE_DELIMITER
+    SEPARATOR_KEY, TABLE_HEADER_KEY, PATTERN_FILE_DELIMITER, DIGITS_MACRO_NAME
 
 # For debugging parsing
 DEBUG_LOG_EXTRACT = True
@@ -188,11 +188,11 @@ class ExtractButtonsFromMarkdown:
 
     def extract_table(self, table: Table) -> [ButtonSequence]:
         result = []
-        
+
         if self.is_button_table(table, self.header.lower()):
             extracted = [self.extract_tablerow(child) for child in table.children]
             result = [e for e in extracted if e]
-        
+
         return result
 
     @staticmethod
@@ -214,7 +214,7 @@ class ExtractButtonsFromMarkdown:
 
         if valid_token:
             sequence_map = self.extract_rawtext(valid_token)
-            
+
             if sequence_map:
                 result = ButtonSequence(sequence_map, tablerow.line_number)
         elif mismatch and DEBUG_LOG_EXTRACT:
@@ -274,7 +274,7 @@ class ExtractButtonsFromMarkdown:
         candidate_sequence = self.separate_rawtext(text, self.separators)
         validating_patterns = self.button_patterns.keys()
         valid_names = list(self.button_patterns.values())
-        
+
         poison, valid_sequence = self.filter_sequence(candidate_sequence, valid_names, validating_patterns)
 
         if not poison:
@@ -317,7 +317,8 @@ class ExtractButtonsFromMarkdown:
             case 1:
                 match_index = ExtractButtonsFromMarkdown.find_first_non_null_index(match_results)
                 short_name = valid_names[match_index]
-                result = {element: short_name}
+                macro_expanded = ExtractButtonsFromMarkdown.macro_expand_short_name(element, short_name)
+                result = {element: macro_expanded}
             case _:
                 print(f"error: unexpected multiple matches ({match_count}) for element \"{element}\", "
                       f"check the pattern file",
@@ -347,3 +348,52 @@ class ExtractButtonsFromMarkdown:
     @staticmethod
     def find_first_non_null_index(a_list):
         return next((i for i, x in enumerate(a_list) if x is not None), -1)
+
+    @staticmethod
+    def macro_expand_short_name(element, short_name) -> str:
+        """Replace recognized macros found in short_name with the results from their execution."""
+        temp = short_name
+
+        if DIGITS_MACRO_NAME in temp:
+            replacement = ExtractButtonsFromMarkdown.extract_digit_ranges(element)
+            temp = temp.replace(DIGITS_MACRO_NAME, replacement)
+
+        result = temp
+        return result
+
+    @staticmethod
+    def extract_digit_ranges(text):
+        """Extract positively incrementing ranges separated by hyphens, and other digits.
+        
+        Example: [1-3, 7,8] => 12378
+        
+        See: test_extract_md.py
+        """
+        extracted = []
+        start_digit = None
+        last_digit = None
+        # E.g. "[1-3, 7,8]"
+        for char in text:
+            # If this is a digit: "1-3, 7,8]" or "3, 7,8]" or "7,8]" or 8]"
+            if char.isdigit():
+                digit = int(char)
+                # If we are in a range: "3, 7,8]"
+                if start_digit is not None:
+                    end_digit = digit
+                    # Add digit to result, including preceding digits in range, excepting the start digit
+                    extracted.extend(range(start_digit + 1, end_digit + 1))
+                    # No longer in a range
+                    start_digit = None
+                else:
+                    # Add digit to result: "1-3, 7,8]" or "7,8]" or 8]"
+                    extracted.append(digit)
+                last_digit = digit
+            # If we are starting a range: "-3, 7,8]"
+            elif char == '-' and last_digit is not None:
+                start_digit = last_digit
+            # If we are breaking a range
+            else:
+                start_digit = None
+        # Convert to string
+        result = "".join([str(x) for x in extracted]) 
+        return result

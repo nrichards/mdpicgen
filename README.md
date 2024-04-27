@@ -175,14 +175,28 @@ Button pattern files (`*.patset`) are used to define the matching pattern and th
 
 The files are similar to CSVs, and use equals (`=`) instead of commas. They are formatted and line-oriented:
 
-| Format                | Description                                                                                                                                                                                                                                                                                                                                      |
-|-----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `^[B]?1$ = 1`         | Button patterns.<br><br>**FORMAT**: [RegEx to match buttons, as written in Markdown] = [Shortened name used to build image filenames]<br>Keys and values separated by an equals (=). <br>Keys are [regular expressions](https://docs.python.org/3/library/re.html). <br>Values are short strings used for [image names](#generates-image-names). |
-| `# this is a comment` | (Optional) hash-tag (#) comment lines                                                                                                                                                                                                                                                                                                            |
-| `__header__`          | An unquoted string, used to identify which tables to parse by matching against a table's first column's header text contents.                                                                                                                                                                                                                    |
-| `__separator__`       | One or more quoted strings. Used help break-down, to split up a long button sequence into individual buttons. These individual buttons are then matched against the button patterns, above.                                                                                                                                                      |
+| Format                | Description                                                                                                                                                                                                                                                                                                                                                                                                                          |
+|-----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `^SHIFT$ = s`         | Match a button description with a [pattern](#matching-pattern-is-powerful), and map the button to a substring to be used when naming a generated image for this button.<br><br>**FORMAT**: <br>[RegEx to match buttons] = [Filename substring, or `%digits%` macro] <br><br>E.g. Here, `SHIFT` maps to the `s` in `s_splay_d.png` for the [sample Markdown's](#picture-is-worth-1000-words) sequence `SHIFT + SEQ PLAY + turn dial`. |
+| `# this is a comment` | Comment lines with hash-tag (`#`)                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `__header__`          | Identify which tables to parse with this unquoted string. Matches against a table's first column's header text contents.                                                                                                                                                                                                                                                                                                             |
+| `__separator__`       | Help break-down and split up a long button sequence into individual buttons, with one or more quoted strings. These individual buttons are then matched against the button patterns, above.                                                                                                                                                                                                                                          |
 
 A [default button pattern file](qunmk2.patset) is provided for the Qun mk2 synthesizer.
+
+### Matching pattern is powerful
+
+* Keys and values separated by an equals (=). 
+  * Keys are [regular expressions](https://docs.python.org/3/library/re.html). Use https://pythex.org/ to test expressions.
+  * Values are short strings used for [image names](#generates-image-names), or the `%digits%` macro. Can embed the macro in a short string, too.
+
+* `%digits%` macro creates a value from digits in a button sequence. It expands ranges of digits, and carries over single digits. Carefully craft the regex to make the most of this macro.
+  * E.g. For RULE = `^My Pattern 2-5,8 Here$ = %digits%`, VALUE = `23458`.
+  * **TRICKY**: To avoid capturing unwanted digits with the `%digits%` macro, carefully craft the regex. RegEx key match supports a single capture group: the first. Use this to identify the important digits in a match.
+    * `(blabla)` is a capturing group pattern, identifying the important part as `blabla`. Only the first of these will be converted to a value.
+    * `(?:blabla)` is a [non-capturing](https://docs.python.org/3/library/re.html) (aka "shy") group, avoiding this becoming the first group, making it invisible to `%digits%`. 
+    * E.g. setup capture and non-capture groups to only capture `1-8`, not `2`, and to ignore "`Press `", in `Press B[1-8] (2nd pattern)` with pattern `^(?:Press )?([B]?\[[1-8]-[1-8]\])[ a-zA-Z0-9\(\)\-,\[\].]*$`. This ignores the "`Press `" substring, and captures the first bracket-surrounded digits and digit ranges. See [this tricky match on pythex](https://pythex.org/?regex=%5E(%3F%3APress%20)%3F(%5BB%5D%3F%5C%5B%5B1-8%5D-%5B1-8%5D%5C%5D)%5B%20a-zA-Z0-9%5C(%5C)%5C-%2C%5C%5B%5C%5D.%5D*%24&test_string=Press%20B%5B1-8%5D%20(2nd%20pattern)&ignorecase=0&multiline=0&dotall=0&verbose=0).
+
 
 ### Sample patset
 
@@ -190,7 +204,7 @@ A [default button pattern file](qunmk2.patset) is provided for the Qun mk2 synth
 __header__ = Button
 __separator__ = "+"
 ^SHIFT$ = s
-^[B]?(utton)?[ ]?1[ \-a-zA-Z]*( \(Long press\))?$ = 1
+^[B]?(utton)?[ ]?\d[ \-a-zA-Z]*( \(Long press\))?$ = %digits%
 ^(turn)?[ ]?dial[ a-z]*?$ = d
 ^NO( \(<\))?[ a-z]*$ = n
 ```

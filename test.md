@@ -1,9 +1,11 @@
 ## Test table
 
+
 | Name       | Age | Unrecognized table                        |
 |------------|-----|-------------------------------------------|
 | SHIFT <br> | 25  | not supported, table <br> <br/> no        |       
 | 1 <br>     | 30  | not supported, table ![](./poop) <br/> no |
+
 
 
 | Button             | Function                                                   |
@@ -17,17 +19,20 @@
 | SHIFT + 6 <i>cool</i> | not supported, wrong html, ![](./poop) is in wrong section |
 | ZORK               | not supported, not recognized button                       |
 
+
 |              Button               | Description |
 |:---------------------------------:|-------------|
 | SHIFT + SEQ PLAY + turn dial <br> | Do thing    |
 
 
+
 | Button                  | Function                                |
 |-------------------------|-----------------------------------------|
+| B[2-6] <br> | |
 | 1 + 2 + 3 <br>          | supported                               |
 | 9 + 10 + 11 <br>        | not supported. not recognized buttons.  |
 | SYSTEM + Turn dial <br> | supported. case-insensitive internally. |
-| dorkus <br>             | not supported                           |
+| 11 <br>                 | not supported                           |
 
 ## BASIC SHORTCUTS
 
