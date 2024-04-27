@@ -15,6 +15,8 @@ from constants import HTML_BREAK_PATTERN, SHORT_NAME_INFIX_SEPARATOR, COMMENT_KE
 # For debugging parsing
 DEBUG_LOG_EXTRACT = True
 
+EXTRACT_CAPTURE_GROUP_INDEX = 1
+
 
 def extract_button_sequences(md_file, but_pat_file) -> ["ButtonSequence"]:
     """
@@ -304,7 +306,7 @@ class ExtractButtonsFromMarkdown:
     @staticmethod
     def match_element(element, valid_names, validating_patterns) -> {str: str}:
         # constrain overall result to element's presence in recognized patterns
-        match_results = list(map(lambda pattern: pattern.search(element), validating_patterns))
+        match_results = list(map(lambda p: p.search(element), validating_patterns))
 
         # Keep a found button sequence if it matches an expected button pattern.
         # Count matches (non-None) to ensure this is a valid button.
@@ -316,8 +318,12 @@ class ExtractButtonsFromMarkdown:
                 pass
             case 1:
                 match_index = ExtractButtonsFromMarkdown.find_first_non_null_index(match_results)
+                
+                pattern_match = match_results[match_index]
+                element_group = ExtractButtonsFromMarkdown.get_capture_group(element, pattern_match)
+                
                 short_name = valid_names[match_index]
-                macro_expanded = ExtractButtonsFromMarkdown.macro_expand_short_name(element, short_name)
+                macro_expanded = ExtractButtonsFromMarkdown.macro_expand_short_name(element_group, short_name)
                 result = {element: macro_expanded}
             case _:
                 print(f"error: unexpected multiple matches ({match_count}) for element \"{element}\", "
@@ -325,6 +331,15 @@ class ExtractButtonsFromMarkdown:
                       file=sys.stderr)
 
         return result
+
+    @staticmethod
+    def get_capture_group(element, pattern_match) -> str:
+        """ Extract only the desired capture group, if specified. We use the first (1) group.
+        Useful to exclude e.g. the "2" from "B[1-8] (2nd pattern) in any sub-mode".
+        
+        Returns: first (EXTRACT_CAPTURE_GROUP_INDEX) capture group, or the whole match if no group.
+        """
+        return pattern_match.group(EXTRACT_CAPTURE_GROUP_INDEX) if pattern_match.lastindex else element
 
     @staticmethod
     def separate_rawtext(text, separators):
@@ -351,7 +366,8 @@ class ExtractButtonsFromMarkdown:
 
     @staticmethod
     def macro_expand_short_name(element, short_name) -> str:
-        """Replace recognized macros found in short_name with the results from their execution."""
+        """Replace recognized macros found in short_name with the results from their execution.
+        """
         temp = short_name
 
         if DIGITS_MACRO_NAME in temp:
