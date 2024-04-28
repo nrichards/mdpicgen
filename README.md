@@ -2,7 +2,7 @@
 
 Helps keep Markdown editing fun.
 
-Automates maintenance of Markdown files containing patterend images. Generates from, and inserts or updates images into a Markdown.
+This tool reads string sequences from Markdown and generates custom visuals using custom image layers. Inserts or updates images back in to the Markdown.
 
 ## Inspiration
 

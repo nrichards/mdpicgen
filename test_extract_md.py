@@ -4,6 +4,7 @@ from util import extract_digit_ranges
 
 
 class TestExtractButtonsFromMarkdown(TestCase):
+    
     def test_extract_digit_ranges__single_digit(self):
         """Tests the function with a single digit string."""
         self.assert_extract_digit_ranges("5", "5")
@@ -22,4 +23,4 @@ class TestExtractButtonsFromMarkdown(TestCase):
 
     def assert_extract_digit_ranges(self, text, expected_output):
         actual_output = extract_digit_ranges(text)
-        self.assertEqual(actual_output, expected_output)
+        self.assertEqual(expected_output, actual_output)

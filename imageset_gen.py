@@ -24,11 +24,11 @@ class ImageSet:
         processed_basenames = set()
         for sequence in button_sequences:
             basename = sequence.basename
-            
+
             if basename not in processed_basenames:
                 self.process_image(out_dirname, sequence, opt)
                 processed_basenames.add(basename)
-    
+
         print(f"composited {len(processed_basenames)} images")
 
     def load_imageset(self, csv_file, imageset_dir) -> {}:
@@ -57,13 +57,10 @@ class ImageSet:
         return Image.open(image_filename)
 
     def process_image(self, out_dirname, sequence, opt: ImageOpt):
-       
-        
-        
+
         # TODO: Group sequence of digit layers from same sequence together
         # TODO: Extend duration of button press for sequences marked "Long press". (Return duration list along with images.)
         # TODO: Flash On-Off-On for repeat patterns in a sequence
-
 
         basename = sequence.basename
         image_filename = f"{out_dirname}/{basename}.{opt.extension()}"
@@ -76,35 +73,48 @@ class ImageSet:
                            duration=[400] * (len(images) - 1) + [2000])
         else:
             # PNG
-            layer_names: [] = self.process_basename(basename)
+            layer_names: [] = self.layer_names_from_basename(basename=basename, add_bg=True, unpack_digits=True)
             composite_image = self.gen_composite_image(opt, layer_names, self.layers)
             composite_image.save(image_filename, format=opt.extension().upper())
 
     @staticmethod
-    def process_basename(basename) -> [str]:
+    def layer_names_from_basename(*, basename, unpack_digits=True, add_bg=True) -> [str]:
+        """Transform a formatted layered image filename to a list of names, suitable for looking up its component
+         layers.
+
+        :param basename: formatted layered image filename
+        :param unpack_digits: Whether to unpack compound multi-digit names to individual digit layer names
+        :param add_bg: Whether to ask for rending a background layer
+        :return: List of layer names, conditionally including compound multi-digit names.
+        """
+        results = []
         compound_layer_names = basename.split(SHORT_NAME_INFIX_SEPARATOR)
 
-        # Unpack the compound all-digit multi-character layer names to single-digit names, because they're packed
-        # together for presentation purposes in the filename.
+        # Split by infix separator.
         # Keep the alphabetic strings whole, because multi-character alphabetic layer names are valid.
+        # Conditionally unpack compound all-digit multi-character layer names to single-digit names.
+        # Unpack because they're packed together for presentation purposes in the filename.
         layer_names = [layer_name for packed in compound_layer_names
-                       for layer_name in (packed if packed.isdigit() else [packed])]
+                       for layer_name in (packed if packed.isdigit() and unpack_digits else [packed])]
 
-        # Always render the background layer.
-        results = [BG_LAYER_NAME] + list(layer_names)
+        if add_bg:
+            results.append(BG_LAYER_NAME)
+            
+        results.extend(layer_names)
 
         if DEBUG_LOG_IMAGESET:
             print(f"computed layer names: {results}", file=sys.stderr)
 
         return results
 
-    def gen_animated_images(self, sequence:ButtonSequence, opt):
+    def gen_animated_images(self, sequence: ButtonSequence, opt):
         images = []
         composited_image = None
-        
+
         # TODO: Sub-composite in order to simultaneously render multiple layers then remove them
-        
-        layer_names: [] = self.process_basename(sequence.basename)
+        # composite group
+
+        layer_names: [] = self.layer_names_from_basename(basename=sequence.basename)
         image_layers = [self.layers[layer_name] for layer_name in layer_names]
 
         for layer in image_layers:
