@@ -4,6 +4,8 @@ Helps keep Markdown editing fun.
 
 This tool reads string sequences from Markdown and generates custom visuals using custom image layers. Inserts or updates images back in to the Markdown.
 
+* "really cool!" -_a personal friend of the developer_
+
 ## Inspiration
 
 To help keep Markdown editing fun for projects needing to add many images which are permutations of a source diagram, this tool will do the heavy lifting.
