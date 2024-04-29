@@ -22,3 +22,12 @@ SEPARATOR_KEY = "__separator__"
 TABLE_HEADER_KEY = "__header__"
 PATTERN_FILE_DELIMITER = "="
 DIGITS_MACRO_NAME = "%digits%"
+
+# For reading the imageset CSV text files - (single-quoted for string interpolation, please)
+Y_POS_CSV_HEADER = 'y_pos'
+X_POS_CSV_HEADER = 'x_pos'
+LAYER_NAME_CSV_HEADER = 'layer_name'
+IMAGE_FILE_CSV_HEADER = 'image_file'
+
+GIF_END_FRAME_DURATION_MS = 2000
+GIF_MID_FRAME_DURATION_MS = 400
