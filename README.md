@@ -327,3 +327,13 @@ Assumes BASH, changes directory for clarity's sake, assumes [Qun repository](htt
 
 Currently, column one is the only column for image extraction and placement. Markdown tables can be written with, or without boundary edge markers (|), which complicates parsing.
 * **Solution**: Support arbitrary columns by leveraging [mistletoe](#requirements) to first format and normalize Markdown tables in-memory, then I may rely upon a regular table row boundary pattern and make changes, leveraging that and the non-whitespace elements to inject / update image links, preserving the original non-auto-formatted Markdown's look
+* **Solution**: custom HTML `<bp> <bpr> <bpc> <bpg>` tags, which could arbitrarily insert a button picture or columns:
+
+```markdown
+| Button                                   | Function                                 |
+|------------------------------------------|------------------------------------------|
+| SHIFT + SEQ PLAY + turn dial             | <bp> <-BP Inserts image before this text |
+| SHIFT + SEQ PLAY + turn dial BPR-> <bpr> | Inserts line-break, and then new image   |
+| SHIFT + SEQ PLAY + turn dial BPC-> <bpc> | Inserts new column                       |
+| SHIFT + SEQ PLAY + turn dial BPG-> <bpg> | Inserts new GIF                          |
+```
