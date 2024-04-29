@@ -156,6 +156,12 @@ This script employs **sub-commands** to generate images.
     * E.g. the `"s"` in the layer name, `"SHIFT - s"`
     * See also the [image name discussion](#generates-image-names).
   * PSD layers **should** be rasterized, first. They may be vector layers and this may result in empty images being generated. Rasterizing can fix this issue in some cases. Overall, PSD files can be unexpectedly problematic.
+    
+Output images feature several useful qualities.
+
+* A background layer is presumed. Hence, this script requires an image for a `"BG"` layer, and a declaration of the `"BG"` layer in the image datasource -- the CSV for imageset, or the PSD.
+* Animated GIF images have a long delay for the final frame of the animation. Customize this in [constants.py](constants.py).
+* Animated GIF supports repeated pressing of the same key command by flashing -- withdrawing the repeated image for one frame, then adding it back in for the next frame. E.g. the sequence `"SPLAY + 5 + 5"` will flash `"5"` by inserting a frame only containing the prior `"SPLAY"` image, before inserting the final `"5"` frame.
 
 ## Markdown is generated out
 
@@ -315,13 +321,3 @@ Assumes BASH, changes directory for clarity's sake, assumes [Qun repository](htt
 
 Currently, column one is the only column for image extraction and placement. Markdown tables can be written with, or without boundary edge markers (|), which complicates parsing.
 * **Solution**: Support arbitrary columns by leveraging [mistletoe](#requirements) to first format and normalize Markdown tables in-memory, then I may rely upon a regular table row boundary pattern and make changes, leveraging that and the non-whitespace elements to inject / update image links, preserving the original non-auto-formatted Markdown's look
-
-## Animated GIFs and more: press-duration visualization of buttons
-
-* Currently, a static PNG is generated illustrating the original Markdown documentation's chord of buttons needing pressing e.g. to initiate a feature. Occasionally button presses requre holding for a longer duration than just a moment, and there is no way to represent this with a static image.
-* **Idea**:
-  * Take a button sequence with `"(Long press)"` instructions and make a GIF out of it, _flashing buttons with a given timing_. And, take multistep sequences which involve pressing the same button multiple times, and represent those with flashing. Pillow library can generate GIFs from source images. 
-  * A simpler approach to _statically represent the duration_, and repeated pressing, could be used. This could suffer from visual over-complication, becoming more distracting than educational. 
-    * E.g. to illustrate this, activated buttons could also have a double-outline, or perhaps an asterisk shaped flare of rays emerging from underneath the button for long-press, and a super-script dot to indicate the number of repeated presses required. 
-    * Appropriately, sheet music has the concept of [long press](https://en.wikipedia.org/wiki/Note_value) and also [repeating phrases](https://en.wikipedia.org/wiki/Repeat_sign). So it may be worthwhile to consider their conceits.
-  * A _combination approach_ could be used, also where the first frame of the GIF is the static image and subsequent frames flash buttons. This might dazzle the reader more than help. Though in my opinion utility of productivity is over-emphasized - the challenging [form follows function](https://en.wikipedia.org/wiki/Form_follows_function) practice, in short.

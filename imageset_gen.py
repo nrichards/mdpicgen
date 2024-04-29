@@ -138,8 +138,6 @@ class ImageSet:
         :param opt: 
         :return: List of images, and durations for those images.
         """
-        # TODO: Extend duration of button press for sequences marked "Long press". (Return duration list along with images.)
-        # TODO: Flash On-Off-On for repeat patterns in a sequence
 
         packed_layer_names: [] = ImageSet.layer_names_from_basename(basename=sequence.basename, unpack_digits=False)
         grouped_layer_names = [ImageSet.layer_names_from_basename(basename=name, unpack_digits=True, add_bg=False)
@@ -148,22 +146,38 @@ class ImageSet:
         if DEBUG_LOG_IMAGESET:
             print(f"grouped layer names: {grouped_layer_names}", file=sys.stderr)
 
-        # composite layer groups into each new image frame
-        
         grouped_images = []
         composited_image = None
+        last_layer_names = []
         for ungrouped_layer_names in grouped_layer_names:
+            ImageSet.handle_identical_layer_flash(grouped_images, last_layer_names, ungrouped_layer_names)
+
             ungrouped_image_layers = [self.all_layers[layer_name] for layer_name in ungrouped_layer_names]
-            
+
             for layer in ungrouped_image_layers:
-                composited_image = self.composite_layer(composited_image, layer)
+                composited_image = ImageSet.composite_layer(composited_image, layer)
+
             resized = ImageSet.resize_image(opt, composited_image)
             grouped_images.append(resized)
 
+            last_layer_names = ungrouped_layer_names
+
         durations = [GIF_MID_FRAME_DURATION_MS] * (len(grouped_images) - 1) + [GIF_END_FRAME_DURATION_MS]
 
-        # return images, durations
+        if DEBUG_LOG_IMAGESET:
+            print(f"composed animation of {len(grouped_images)} images", file=sys.stderr)
+
         return grouped_images, durations
+
+    @staticmethod
+    def handle_identical_layer_flash(grouped_images, last_layer_names, ungrouped_layer_names):
+        """ Checks for identical layers between last image and next, and then appends a prior image, animating a flash 
+        to illustrate the repetition.
+        """
+        if (last_layer_names and
+                any(element in set(last_layer_names) for element in set(ungrouped_layer_names)) and
+                len(grouped_images) > 2):
+            grouped_images.append(grouped_images[-2].copy())
 
     @staticmethod
     def gen_composite_image(opt: ImageOpt, layer_names, layers: {str: ImageLayer}) -> Image:
