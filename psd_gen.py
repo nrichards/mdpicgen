@@ -4,7 +4,7 @@ import sys
 
 from psd_tools import PSDImage
 
-from constants import BG_LAYER_NAME, SHORT_NAME_INFIX_SEPARATOR
+from constants import BG_LAYER_NAME, SHORT_NAME_INFIX_SEPARATOR, THREADS_PER_CPU
 from util import make_out_dir, size_from_height
 
 # For debugging generating
@@ -80,14 +80,14 @@ class PSDInMd:
         unique_basenames = list(set(basenames))
 
         # Performance metrics for posterity: 10-core, MacBook Pro, 16-inch, 2021, Apple M1 Pro, 16GB, Sonoma 14.4.1
-        #   2: python3 ../psd-in-md README.md --md-out-file foopy.md --psd-file     198.15s user 90.12s system 189% cpu 2:31.85 total
-        #   5: python3 ../psd-in-md README.md --md-out-file foopy.md --psd-file     227.42s user 120.66s system 407% cpu 1:25.39 total
-        #   6: python3 ../psd-in-md README.md --md-out-file foopy.md --psd-file     235.32s user 132.78s system 448% cpu 1:22.04 total
-        #   8: python3 ../psd-in-md README.md --md-out-file foopy.md --psd-file     248.46s user 151.97s system 505% cpu 1:19.18 total
-        #   10: python3 ../psd-in-md README.md --md-out-file foopy.md --psd-file     259.84s user 162.87s system 530% cpu 1:19.63 total
-        #   12: python3 ../psd-in-md README.md --md-out-file foopy.md --psd-file     256.55s user 193.13s system 418% cpu 1:47.42 total
-        #   20: python3 ../psd-in-md README.md --md-out-file foopy.md --psd-file     261.15s user 347.56s system 389% cpu 2:36.09 total
-        decent_performance = int(os.cpu_count() * 0.8)
+        #  Threads:  2, 189% cpu, 2:31.85 total
+        #  Threads:  5, 407% cpu, 1:25.39 total
+        #  Threads:  6, 448% cpu, 1:22.04 total
+        #  Threads:  8, 505% cpu, 1:19.18 total
+        #  Threads: 10, 530% cpu, 1:19.63 total
+        #  Threads: 12, 418% cpu, 1:47.42 total
+        #  Threads: 20, 389% cpu, 2:36.09 total
+        decent_performance = int(os.cpu_count() * THREADS_PER_CPU)
         if DEBUG_LOG_PSD:
             print(f"thread count: {decent_performance}", file=sys.stderr)
 

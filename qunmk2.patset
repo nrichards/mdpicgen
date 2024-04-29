@@ -1,6 +1,9 @@
 # Each line: button rule or separator rule
 # Button rule:
-#   FORMAT: <RegEx to match buttons, as written in Markdown> = <Shortened name used to build image filenames>
+#   FORMAT:
+#    <RegEx to match buttons, as written in Markdown> = <Shortened name used to build image filenames, or "%digits%">
+#    To match only important digits, write regex with them as the first capturing group "(bla)" syntax,
+#      excluding unwanted digits judiciously with non-capturing "(?:bla)" syntax.
 # Separator rule:
 #   FORMAT: __separator__ = "+"
 #   One or more.
@@ -17,18 +20,8 @@ __separator__ = " or "
 __separator__ = " / "
 __separator__ = ", then "
 ^SHIFT$ = s
-^[B]?(utton)?[ ]?1[ \-a-zA-Z]*( \(Long press\))?$ = 1
-^[B]?(utton)?[ ]?2[ \-a-zA-Z]*( \(Long press\))?$ = 2
-^[B]?(utton)?[ ]?3[ \-a-zA-Z]*( \(Long press\))?$ = 3
-^[B]?(utton)?[ ]?4[ \-a-zA-Z]*( \(Long press\))?$ = 4
-^[B]?(utton)?[ ]?5[ \-a-zA-Z]*( \(Long press\))?$ = 5
-^[B]?(utton)?[ ]?6[ \-a-zA-Z]*( \(Long press\))?$ = 6
-^[B]?(utton)?[ ]?7[ \-a-zA-Z]*( \(Long press\))?$ = 7
-^[B]?(utton)?[ ]?8[ \-a-zA-Z]*( \(Long press\))?$ = 8
-^(Press )?[B]?\[1-3\][ a-zA-Z0-9\(\)\-,]*$ = 123
-^(Press )?[B]?\[1-3[ ,]+[,78]+\][ a-zA-Z0-9\(\)\-,]*$ = 12378
-^(Press )?[B]?\[1-5\][ a-zA-Z0-9\(\)\-,]*$ = 12345
-^(Press )?[B]?\[1-8\][ a-zA-Z0-9\(\)\-,\[\].]*$ = 12345678
+^[B]?(?:utton)?[ ]?(\d)[ \-a-zA-Z]*(?: \(Long press\))?$ = %digits%
+^(?:Press )?[B]?(\[[1-8]-[1-8][, ]*?[,\d]*?\])[ a-zA-Z0-9\(\)\-,\[\].]*$ = %digits%
 ^(turn)?[ ]?dial[ a-z]*?$ = d
 ^NO( \(<\))?[ a-z]*$ = n
 ^OK( \(>\))?[ a-z]*( \([ a-zA-Z]*\))?$ = o

@@ -6,8 +6,9 @@ import shutil
 import mistletoe
 from mistletoe.markdown_renderer import MarkdownRenderer
 
-from constants import HTML_BREAK_PATTERN, HTML_BREAK, IMAGE_EXTENSION
-from extract_md import ButtonSequence
+from constants import HTML_BREAK_PATTERN, HTML_BREAK
+from button_sequence import ButtonSequence
+from util import ImageOpt
 
 # For debugging parsing
 DEBUG_LOG_MODIFY = False
@@ -18,7 +19,7 @@ def format_markdown(markdown_filename):
     return formatter.formatted
 
 
-def write_markdown(md_out_file, image_out_path, md_in_file, button_sequences: [ButtonSequence]):
+def write_markdown(md_out_file, image_out_path, md_in_file, button_sequences: [ButtonSequence], opt: ImageOpt):
     if not button_sequences:
         shutil.copyfile(md_in_file, md_out_file)
         return
@@ -39,7 +40,7 @@ def write_markdown(md_out_file, image_out_path, md_in_file, button_sequences: [B
                 if seq.line_number == line_count:
                     # alter the line
                     out_line = update_or_replace_image_in_markdown(
-                        in_line, f"{image_out_path}/{seq.basename}.{IMAGE_EXTENSION}")
+                        in_line, f"{image_out_path}/{seq.basename}.{opt.extension()}")
 
                     # Prepare for the next opportunity to mutate a button sequence
                     try:

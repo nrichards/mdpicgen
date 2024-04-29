@@ -1,84 +1,79 @@
-import concurrent.futures
 import csv
-import os
 import sys
 
 from PIL import Image
 
-from constants import BG_LAYER_NAME, IMAGE_EXTENSION, SHORT_NAME_INFIX_SEPARATOR
-from util import make_out_dir, size_from_height
+from constants import BG_LAYER_NAME, SHORT_NAME_INFIX_SEPARATOR, Y_POS_CSV_HEADER, X_POS_CSV_HEADER, \
+    LAYER_NAME_CSV_HEADER, IMAGE_FILE_CSV_HEADER, GIF_END_FRAME_DURATION_MS, GIF_MID_FRAME_DURATION_MS
+from util import make_out_dir, size_from_height, ImageOpt
+from button_sequence import ButtonSequence
 
-DEBUG_LOG_IMAGESET = False
-RESIZE_IMAGE = True
+DEBUG_LOG_IMAGESET = True
+ENABLE_RESIZE = True
 USE_THREADING_EXPERIMENTAL = False  # Causes truncated image rendering, buggy
 
 
-class ImageSet:
-    layers = {str: {}}
+class ImageLayer:
+    image: Image
+    layer_name: str
+    x: int
+    y: int
 
-    def process_imageset(self, out_dirname, imageset_filename, imageset_dir, basenames, height):
-        self.layers = self.load_imageset(imageset_filename, imageset_dir)
+    def __init__(self, image: Image, layer_name: str, x: int, y: int):
+        self.image = image
+        self.layer_name = layer_name
+        self.x = x
+        self.y = y
+
+    def __repr__(self) -> str:
+        return "<%s.%s layer_name=%s x=%d y=%d image=%s at 0x%X>" % (
+            self.__class__.__module__,
+            self.__class__.__name__,
+            self.layer_name,
+            self.x,
+            self.y,
+            self.image,
+            id(self),
+        )
+
+
+class ImageSet:
+    all_layers: {str: ImageLayer} = {}
+
+    def process_imageset(self, out_dirname, imageset_filename, imageset_dir, button_sequences, opt: ImageOpt):
+        self.all_layers = self.load_imageset(imageset_filename, imageset_dir)
 
         make_out_dir(out_dirname)
 
         # Avoid redundant image generation
-        unique_basenames = list(set(basenames))
-        if DEBUG_LOG_IMAGESET:
-            print(f"unique_basenames: {unique_basenames}", file=sys.stderr)
+        processed_basenames = set()
+        for sequence in button_sequences:
+            basename = sequence.basename
 
-        thread_count = 1
-        if USE_THREADING_EXPERIMENTAL:
-            thread_count = int(os.cpu_count() * 0.8)
+            if basename not in processed_basenames:
+                self.process_image(out_dirname, sequence, opt)
+                processed_basenames.add(basename)
 
-        pool = concurrent.futures.ThreadPoolExecutor(max_workers=thread_count)
+        print(f"composited {len(processed_basenames)} images")
 
-        for basename in unique_basenames:
-            pool.submit(self.process_image, basename, height, out_dirname)
-
-        pool.shutdown(wait=True)
-
-        if DEBUG_LOG_IMAGESET:
-            print(f"composited: {len(unique_basenames)}", file=sys.stderr)
-
-    def process_image(self, basename, height, out_dirname):
-        components = self.process_basename(basename)
-        composite_image = self.generate_image(out_dirname, height, components, self.layers)
-        composite_image.save(f"{out_dirname}/{basename}.{IMAGE_EXTENSION}", format=IMAGE_EXTENSION.upper())
-
-    @staticmethod
-    def process_basename(basename) -> [str]:
-        intermediate_components = basename.split(SHORT_NAME_INFIX_SEPARATOR)
-
-        components = []
-        for component in intermediate_components:
-            if component.isdigit():
-                components = components + [*component]
-            else:
-                components = components + [component]
-
-        # Always render the background layer.
-        results = [BG_LAYER_NAME] + components
-
-        if DEBUG_LOG_IMAGESET:
-            print(f"components: {results}", file=sys.stderr)
-
-        return results
-
-    def load_imageset(self, csv_file, imageset_dir) -> {}:
+    def load_imageset(self, csv_file, imageset_dir) -> {str: ImageLayer}:
+        """ Loads CSV of imageset data
+        :return: Dictionary of layer names to ImageLayer objects
+        """
         results = {}
         with open(csv_file, 'r') as csvfile:
             reader = csv.DictReader(csvfile)
 
             for row in reader:
                 row: dict  # Workaround for https://youtrack.jetbrains.com/issue/PY-60440
-                layer = {
-                    "image": self.load_image(f"{imageset_dir}/{row['image_file']}"),
-                    "layer_name": row["layer_name"],
-                    "x": int(row["x_pos"]),
-                    "y": int(row["y_pos"]),
-                }
+                layer = ImageLayer(
+                    image=self.load_image(f"{imageset_dir}/{row[IMAGE_FILE_CSV_HEADER]}"),
+                    layer_name=row[LAYER_NAME_CSV_HEADER],
+                    x=int(row[X_POS_CSV_HEADER]),
+                    y=int(row[Y_POS_CSV_HEADER]),
+                )
 
-                results[layer["layer_name"]] = layer
+                results[layer.layer_name] = layer
 
         if DEBUG_LOG_IMAGESET:
             print(results, file=sys.stderr)
@@ -89,25 +84,124 @@ class ImageSet:
     def load_image(image_filename):
         return Image.open(image_filename)
 
-    @staticmethod
-    def generate_image(out_dirname, height, components, imageset_layers) -> Image:
-        if DEBUG_LOG_IMAGESET:
-            print(f"generating imageset to dir '{out_dirname}'", file=sys.stderr)
+    def process_image(self, out_dirname, sequence, opt: ImageOpt):
+        basename = sequence.basename
+        image_filename = f"{out_dirname}/{basename}.{opt.extension()}"
 
-        output_image = None
-        for component in components:
-            layer = imageset_layers[component]
-            if DEBUG_LOG_IMAGESET:
-                print(f"compositing layer {component}, layer {layer}", file=sys.stderr)
+        if opt.gif:
+            images, durations = self.gen_animated_images(sequence, opt)
 
-            if not output_image:
-                output_image = layer["image"].copy()
-            else:
-                output_image.alpha_composite(layer["image"], (layer["x"], layer["y"]))
-
-        new_size = size_from_height(height, output_image.size)
-        if RESIZE_IMAGE:
-            result = output_image.resize(new_size)
+            images[0].save(image_filename, save_all=True, append_images=images[1:], loop=0,
+                           duration=durations, format=opt.extension().upper())
         else:
-            result = output_image
+            # PNG
+            layer_names: [] = ImageSet.layer_names_from_basename(basename=basename)
+
+            if DEBUG_LOG_IMAGESET:
+                print(f"computed layer names: {layer_names}", file=sys.stderr)
+
+            composite_image = self.gen_composite_image(opt, layer_names, self.all_layers)
+            composite_image.save(image_filename, format=opt.extension().upper())
+
+    @staticmethod
+    def layer_names_from_basename(*, basename, unpack_digits=True, add_bg=True) -> [str]:
+        """Transform a formatted layered image filename to a list of names, suitable for looking up its component
+         layers.
+
+        :param basename: formatted layered image filename
+        :param unpack_digits: Whether to unpack compound multi-digit names to individual digit layer names
+        :param add_bg: Whether to ask for rending a background layer
+        :return: List of layer names, conditionally including compound multi-digit names.
+        """
+        results = []
+        compound_layer_names = basename.split(SHORT_NAME_INFIX_SEPARATOR)
+
+        # Split by infix separator.
+        # Keep the alphabetic strings whole, because multi-character alphabetic layer names are valid.
+        # Conditionally unpack compound all-digit multi-character layer names to single-digit names.
+        # Unpack because they're packed together for presentation purposes in the filename.
+        layer_names = [layer_name for packed in compound_layer_names
+                       for layer_name in (packed if packed.isdigit() and unpack_digits else [packed])]
+
+        if add_bg:
+            results.append(BG_LAYER_NAME)
+
+        results.extend(layer_names)
+
+        return results
+
+    def gen_animated_images(self, sequence: ButtonSequence, opt) -> ([Image], [int]):
+        """
+        Composites images as a series of images. Defines a duration list for each frame with a hold at its end.
+        
+        :param sequence: 
+        :param opt: 
+        :return: List of images, and durations for those images.
+        """
+
+        packed_layer_names: [] = ImageSet.layer_names_from_basename(basename=sequence.basename, unpack_digits=False)
+        grouped_layer_names = [ImageSet.layer_names_from_basename(basename=name, unpack_digits=True, add_bg=False)
+                               for name in packed_layer_names]
+
+        if DEBUG_LOG_IMAGESET:
+            print(f"grouped layer names: {grouped_layer_names}", file=sys.stderr)
+
+        grouped_images = []
+        composited_image = None
+        last_layer_names = []
+        for ungrouped_layer_names in grouped_layer_names:
+            ImageSet.handle_identical_layer_flash(grouped_images, last_layer_names, ungrouped_layer_names)
+
+            ungrouped_image_layers = [self.all_layers[layer_name] for layer_name in ungrouped_layer_names]
+
+            for layer in ungrouped_image_layers:
+                composited_image = ImageSet.composite_layer(composited_image, layer)
+
+            resized = ImageSet.resize_image(opt, composited_image)
+            grouped_images.append(resized)
+
+            last_layer_names = ungrouped_layer_names
+
+        durations = [GIF_MID_FRAME_DURATION_MS] * (len(grouped_images) - 1) + [GIF_END_FRAME_DURATION_MS]
+
+        if DEBUG_LOG_IMAGESET:
+            print(f"composed animation of {len(grouped_images)} images", file=sys.stderr)
+
+        return grouped_images, durations
+
+    @staticmethod
+    def handle_identical_layer_flash(grouped_images, last_layer_names, ungrouped_layer_names):
+        """ Checks for identical layers between last image and next, and then appends a prior image, animating a flash 
+        to illustrate the repetition.
+        """
+        if (last_layer_names and
+                any(element in set(last_layer_names) for element in set(ungrouped_layer_names)) and
+                len(grouped_images) > 2):
+            grouped_images.append(grouped_images[-2].copy())
+
+    @staticmethod
+    def gen_composite_image(opt: ImageOpt, layer_names, layers: {str: ImageLayer}) -> Image:
+        working_image = None
+        layers = [(layer_name, layers[layer_name]) for layer_name in layer_names]
+
+        for layer_name, layer in layers:
+            if DEBUG_LOG_IMAGESET:
+                print(f"compositing layer name '{layer_name}', layer {layer}", file=sys.stderr)
+
+            working_image = ImageSet.composite_layer(working_image, layer)
+
+        result = ImageSet.resize_image(opt, working_image)
         return result
+
+    @staticmethod
+    def composite_layer(composite_image, layer: ImageLayer) -> Image:
+        if not composite_image:
+            composite_image = layer.image.copy()
+        else:
+            composite_image.alpha_composite(layer.image, (layer.x, layer.y))
+
+        return composite_image
+
+    @staticmethod
+    def resize_image(opt, output_image):
+        return output_image.resize(size_from_height(opt.height, output_image.size)) if ENABLE_RESIZE else output_image
