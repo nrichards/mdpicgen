@@ -162,8 +162,12 @@ This script employs **sub-commands** to generate images.
 Output images feature several useful qualities.
 
 * A background layer is presumed. Hence, this script requires an image for a `"BG"` layer, and a declaration of the `"BG"` layer in the image datasource -- the CSV for imageset, or the PSD.
-* Animated GIF images have a long delay for the final frame of the animation. Customize this in [constants.py](constants.py).
-* Animated GIF supports repeated pressing of the same key command by flashing -- withdrawing the repeated image for one frame, then adding it back in for the next frame. E.g. the sequence `"SPLAY + 5 + 5"` will flash `"5"` by inserting a frame only containing the prior `"SPLAY"` image, before inserting the final `"5"` frame.
+* Animated GIF images can be used in still-documents, and are designed to effectively visually communicate the sequence.
+  * A "poster image" shows the completed sequence, shown at the start
+  * Flashes any identical button command "off then on again", to indicate the repeated press.
+    * E.g. the sequence `"SPLAY + 5 + 5"` will flash `"5"` by inserting a frame only containing the prior `"SPLAY"` image, before inserting the final `"5"` frame.
+  * Hold durations at beginning and end to help convey the goal.
+    * Customize delays in [constants.py](constants.py).
 
 ## Markdown is generated out
 

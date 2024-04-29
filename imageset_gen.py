@@ -4,7 +4,8 @@ import sys
 from PIL import Image
 
 from constants import BG_LAYER_NAME, SHORT_NAME_INFIX_SEPARATOR, Y_POS_CSV_HEADER, X_POS_CSV_HEADER, \
-    LAYER_NAME_CSV_HEADER, IMAGE_FILE_CSV_HEADER, GIF_END_FRAME_DURATION_MS, GIF_MID_FRAME_DURATION_MS
+    LAYER_NAME_CSV_HEADER, IMAGE_FILE_CSV_HEADER, GIF_END_FRAME_DURATION_MS, GIF_MID_FRAME_DURATION_MS, \
+    GIF_BEGIN_FRAME_DURATION_MS
 from util import make_out_dir, size_from_height, ImageOpt
 from button_sequence import ButtonSequence
 
@@ -89,7 +90,11 @@ class ImageSet:
         image_filename = f"{out_dirname}/{basename}.{opt.extension()}"
 
         if opt.gif:
-            images, durations = self.gen_animated_images(sequence, opt)
+            images, durations, names = ImageSet.gen_animated_images(sequence, opt, self.all_layers)
+       
+            if DEBUG_LOG_IMAGESET:
+                print(f"grouped layer names: {names}", file=sys.stderr)
+                print(f"composed animation of {len(images)} images", file=sys.stderr)
 
             images[0].save(image_filename, save_all=True, append_images=images[1:], loop=0,
                            duration=durations, format=opt.extension().upper())
@@ -130,12 +135,20 @@ class ImageSet:
 
         return results
 
-    def gen_animated_images(self, sequence: ButtonSequence, opt) -> ([Image], [int]):
+    @staticmethod
+    def gen_animated_images(sequence: ButtonSequence, opt: ImageOpt,
+                            all_layers: {str: ImageLayer}) -> ([Image], [int], [[str]]):
         """
-        Composites images as a series of images. Defines a duration list for each frame with a hold at its end.
+        Composites images as a series of images. 
+        * Respects grouped digit-layer sequences, showing as a single image.
+        * Flashes identical sequences by showing prior emptier frame before repeating the current, identical frame.
+        * Defines a duration list for each frame with a hold at its end.
+        * Initially shows the last "full" frame as a poster. Used for GIF loading, to better represent the animation 
+          in still documents. 
         
-        :param sequence: 
-        :param opt: 
+        :param sequence: Ordered list of layer names.
+        :param opt: Configuration for image rendering.
+        :param all_layers: Image data source.
         :return: List of images, and durations for those images.
         """
 
@@ -143,16 +156,13 @@ class ImageSet:
         grouped_layer_names = [ImageSet.layer_names_from_basename(basename=name, unpack_digits=True, add_bg=False)
                                for name in packed_layer_names]
 
-        if DEBUG_LOG_IMAGESET:
-            print(f"grouped layer names: {grouped_layer_names}", file=sys.stderr)
-
         grouped_images = []
         composited_image = None
         last_layer_names = []
         for ungrouped_layer_names in grouped_layer_names:
-            ImageSet.handle_identical_layer_flash(grouped_images, last_layer_names, ungrouped_layer_names)
+            ImageSet.flash_identical_layer(grouped_images, last_layer_names, ungrouped_layer_names)
 
-            ungrouped_image_layers = [self.all_layers[layer_name] for layer_name in ungrouped_layer_names]
+            ungrouped_image_layers = [all_layers[layer_name] for layer_name in ungrouped_layer_names]
 
             for layer in ungrouped_image_layers:
                 composited_image = ImageSet.composite_layer(composited_image, layer)
@@ -162,15 +172,23 @@ class ImageSet:
 
             last_layer_names = ungrouped_layer_names
 
+        added_poster = ImageSet.add_poster_image(grouped_images)
+
         durations = [GIF_MID_FRAME_DURATION_MS] * (len(grouped_images) - 1) + [GIF_END_FRAME_DURATION_MS]
+        if added_poster:
+            durations = [GIF_BEGIN_FRAME_DURATION_MS] + durations
 
-        if DEBUG_LOG_IMAGESET:
-            print(f"composed animation of {len(grouped_images)} images", file=sys.stderr)
-
-        return grouped_images, durations
+        return grouped_images, durations, grouped_layer_names
 
     @staticmethod
-    def handle_identical_layer_flash(grouped_images, last_layer_names, ungrouped_layer_names):
+    def add_poster_image(grouped_images) -> bool:
+        if len(grouped_images) > 1:
+            grouped_images.insert(0, grouped_images[-1].copy())
+            return True
+        return False
+
+    @staticmethod
+    def flash_identical_layer(grouped_images, last_layer_names, ungrouped_layer_names):
         """ Checks for identical layers between last image and next, and then appends a prior image, animating a flash 
         to illustrate the repetition.
         """
