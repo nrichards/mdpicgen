@@ -1,5 +1,6 @@
-# Flow: Old Markdown > Sequences (seqs) > images > new Markdown
+# Flow: From old Markdown to images and new Markdown
 
+For [mdpicgen](https://github.com/nrichards/mdpicgen).
 
 ```mermaid
 flowchart TD
