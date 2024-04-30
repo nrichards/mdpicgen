@@ -1,4 +1,4 @@
-# mdpicgen
+# [mdpicgen](https://github.com/nrichards/mdpicgen)
 
 Helps keep Markdown editing fun.
 
