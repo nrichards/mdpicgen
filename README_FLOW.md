@@ -9,7 +9,7 @@ flowchart TD
 
     subgraph Extract Sequences 'seqs' from Markdown
     B{Read text in \nfirst column \nof each table}
-    D[Split text into \nseqs of commands: \n'seqs']
+    D[Split text into \nsequences of commands: \n'seqs']
     P[INPUT \nPattern file. \nDefines Separators, \nRecognizers, \nand Layer Names.] 
     end
 
@@ -33,7 +33,7 @@ flowchart TD
     E --> OIS
 
     subgraph Generate image links
-    IL[Insert image links after #60;br&#62 for each seq]
+    IL[Insert image links \nafter #60;br&#62 \nfor each seq]
     end
 
     M --> E
@@ -47,7 +47,7 @@ flowchart TD
 
     subgraph OUTPUT
     OIS[OUTPUT \nImages to out folder]
-    OM[OUTPUT \nUpdated Markdown with image links]
+    OM[OUTPUT \nUpdated Markdown \nwith image links]
     OFM[OUTPUT \nFormatted Markdown]
     end
 ```
