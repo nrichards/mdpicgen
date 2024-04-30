@@ -125,7 +125,25 @@ options:
 
 # Details for getting the most out
 
-See a diagram of [how the data flows](README_FLOW.md), from inputs to outputs.
+```mermaid
+flowchart TD
+    A([INPUT \nMarkdown])
+    A1[Extract Sequences from Markdown]
+    A2[Generate Images of seqs]
+    A3[Generate image links]
+    A4[Format each line]
+    O1([OUTPUT \nImages, linked Markdown, formatted Markdown])
+
+    A --> A1
+    A1 --> A2
+    A1 --> A3
+    A --> A4
+    A2 --> O1
+    A3 --> O1
+    A4 --> O1
+    classDef default fill:#fff,stroke:#000,stroke-width:0.5px,font-size:12pt;
+```
+_See a [larger diagram of how the data flows](README_FLOW.md), from inputs to outputs._
 
 ## Workflow
 
