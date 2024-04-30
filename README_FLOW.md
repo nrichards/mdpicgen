@@ -1,4 +1,4 @@
-# How it processes
+# Flow: Old Markdown > Sequences (seqs) > images > new Markdown
 
 
 ```mermaid
@@ -7,9 +7,9 @@ flowchart TD
     A([INPUT \nMarkdown])
 
 
-    subgraph Extract sequences from Markdown
+    subgraph Extract Sequences 'seqs' from Markdown
     B{Read text in \nfirst column \nof each table}
-    D[Split text into \nsequences of commands: \n'seqs']
+    D[Split text into \nseqs of commands: \n'seqs']
     P[INPUT \nPattern file. \nDefines Separators, \nRecognizers, \nand Layer Names.] 
     end
 
@@ -18,9 +18,9 @@ flowchart TD
     B -- No #60;br&#62: ----> B
     P --> D
     
-    M[Sequences, \nand corresponding \nLayer Names \n#40;used for \nfilenames#41;]
+    M[Seqs, \nand corresponding \nLayer Names \n#40;used for \nfilenames#41;]
 
-    subgraph Generate Images of sequences
+    subgraph Generate Images of seqs
     ARGI[INPUT \nArguments for \nimage processing: \nGIF, height, etc.]
     E[Composite images]    
     IS[INPUT \nImage set folder]
@@ -33,7 +33,7 @@ flowchart TD
     E --> OIS
 
     subgraph Generate image links
-    IL[New Markdown]
+    IL[Insert image links after #60;br&#62 for each seq]
     end
 
     M --> E
