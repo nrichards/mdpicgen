@@ -125,6 +125,8 @@ options:
 
 # Details for getting the most out
 
+See a diagram of [how the data flows](README_FLOW.md), from inputs to outputs.
+
 ## Workflow
 
 1. Add a table with [customizable](#button-pattern-file-identifies-images) `"Button"` header text as the first column of a Markdown source document
