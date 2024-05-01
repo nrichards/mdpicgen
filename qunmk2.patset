@@ -31,4 +31,4 @@ __separator__ = ", then "
 ^MODE PLAY( \(RECALL\))?$ = mplay
 ^PARAM( \(Long press\))?$ = param
 ^SYSTEM$ = sys
-^SEQ PLAY$ = splay
+^SEQ PLAY[ .]*?$ = splay

@@ -318,7 +318,7 @@ For this script's `README.md` to output both PNG and GIF to **`doc`**:
 
 Assumes BASH, changes directory for clarity's sake, assumes [Qun repository](https://github.com/raspy135/Qun-mk2) is cloned to `../Qun-mk2`:
 
-* `MDPICGEN=$(PWD) ; cd ../Qun-mk2 ; python3 $MDPICGEN/. --md-file README.md --md-out-file README-merge_me.md --image-out-dir manual_images/but --image-height 56 imageset --imageset-file $MDPICGEN/qunmk2_imageset.csv --imageset-dir $MDPICGEN/imageset ; cd -`
+* `MDPICGEN=$(PWD) ; cd ../Qun-mk2 ; python3 $MDPICGEN/. --md-file README.md --md-out-file README-merge_me.md --image-out-dir manual_images/but --image-height 56 --gif imageset --imageset-file $MDPICGEN/qunmk2_imageset.csv --imageset-dir $MDPICGEN/imageset ; cd -`
 
 ## Print all found button sequences from a Markdown file
 

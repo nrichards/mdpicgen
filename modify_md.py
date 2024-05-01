@@ -71,7 +71,7 @@ def update_or_replace_image_in_markdown(line, new_image_path):
             print(f"warning: ignore unusual line, missing br-tag: \"{temp}\"", file=sys.stderr)
         return line
 
-    # TODO: Flags are fragile. Find a better algorighmic way to replace these.
+    # TODO: Flags are fragile. Find a better algorithmic way to replace these.
     first = True
     column_one = True
 
