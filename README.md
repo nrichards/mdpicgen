@@ -298,8 +298,8 @@ o.png,1,78,631
 
 ## At command line -- show program options, verbosely
 
-* `python3 .`
-* `python3 . -h`
+* `python3 .` -- base command
+* `python3 . imageset -h` -- sub-command will need parameters from base command
 
 ## Generate GIF images for a Markdown file to the default `out` directory
 
