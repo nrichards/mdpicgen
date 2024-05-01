@@ -74,6 +74,7 @@ if __name__ == '__main__':
     button_sequences = []
     try:
         button_sequences = extract_button_sequences(args.md_file, args.button_pattern_file)
+        print(f"extracted {len(button_sequences)} sequences")
     except Exception as e:
         print(f"Aborting. Error extracting button sequences: {e}", file=sys.stderr)
         exit(1)
@@ -81,7 +82,6 @@ if __name__ == '__main__':
     basenames = [seq.basename for seq in button_sequences]
 
     if args.print_extract:
-        print(f"extracted {len(button_sequences)} sequences")
         for seq in button_sequences:
             print(f"{seq.sequence_mapping} => {seq.basename}")
 

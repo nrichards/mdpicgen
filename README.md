@@ -44,6 +44,11 @@ _**and** can make animated GIFs:_
 
 # Usage
 
+## Installation
+
+* `pip install -r requirements.txt`
+* Running [examples](#examples) are available.
+
 ## Markdown and high-level options
 
 ```
@@ -151,10 +156,10 @@ _See a [larger diagram of how the data flows](README_FLOW.md), from inputs to ou
 
 ## Workflow
 
-1. Add a table with [customizable](#button-pattern-file-identifies-images) `"Button"` header text as the first column of a Markdown source document
-2. Add button command sequence text, matching the [format of the pattern file](#button-pattern-file-identifies-images) in use, to a cell in that table's `"Button"` column
+1. Add a table with [customizable](#button-pattern-file-identifies-images) `"Button"` header text as the first column of a Markdown source document, if not already present.
+2. Add button command sequence text, matching the [format of the pattern file](#button-pattern-file-identifies-images) in use, to a cell in that table's `"Button"` column, e.g "`SHIFT + B1`".
 3. Add a `<br>` tag at end of that text, inside the first cell, to mark this button sequence for processing. Repeat as desired.
-4. Run the tool to generate a [new Markdown file](#add-and-update-image-links-and-a-new-markdown-file) and [images](#generate-gif-images-for-a-markdown-file-to-the-default-out-directory)
+4. Run the tool to generate a [new Markdown file](#add-and-update-image-links-and-a-new-markdown-file) and [images](#generate-gif-images-for-a-markdown-file-to-the-default-out-directory).
 
 
 ## Markdown goes in
@@ -293,12 +298,12 @@ o.png,1,78,631
 
 ## At command line -- show program options, verbosely
 
-* `python3 __main__.py`
-* `python3 __main__.py -h`
+* `python3 .`
+* `python3 . -h`
 
 ## Generate GIF images for a Markdown file to the default `out` directory
 
-* `python3 __main__.py --md-file test.md --gif imageset`
+* `python3 . --md-file test.md --gif imageset`
 
 For this script's `README.md` to output both PNG and GIF to **`doc`**:
 
@@ -307,25 +312,25 @@ For this script's `README.md` to output both PNG and GIF to **`doc`**:
 
 ## Add and update image links, and a new Markdown file
 
-* `python3 __main__.py --md-file test.md --md-out-file out_test_md.md`
+* `python3 . --md-file test.md --md-out-file out_test_md.md`
 
 ## Update new Markdown file and generate images for Qun project in a single run
 
 Assumes BASH, changes directory for clarity's sake, assumes [Qun repository](https://github.com/raspy135/Qun-mk2) is cloned to `../Qun-mk2`:
 
-* `MDPICGEN=$(PWD) ; cd ../Qun-mk2 ; python3 $MDPICGEN/__main__.py --md-file README.md --md-out-file README-merge_me.md --image-out-dir manual_images/but --image-height 56 imageset --imageset-file $MDPICGEN/qunmk2_imageset.csv --imageset-dir $MDPICGEN/imageset ; cd -`
+* `MDPICGEN=$(PWD) ; cd ../Qun-mk2 ; python3 $MDPICGEN/. --md-file README.md --md-out-file README-merge_me.md --image-out-dir manual_images/but --image-height 56 imageset --imageset-file $MDPICGEN/qunmk2_imageset.csv --imageset-dir $MDPICGEN/imageset ; cd -`
 
 ## Print all found button sequences from a Markdown file
 
-* `python3 __main__.py --md-file test.md --print-extract`
+* `python3 . --md-file test.md --print-extract`
 
 ## Read a custom button pattern file, and find button sequences in a Markdown file
 
-* `python3 __main__.py --md-file test.md --print-extract --button-pattern-file custom.patset`
+* `python3 . --md-file test.md --print-extract --button-pattern-file custom.patset`
 
 ## Utility to format and print a Markdown file
 
-* `python3 __main__.py --md-file test.md --print-formatted`
+* `python3 . --md-file test.md --print-formatted`
 
 # Limitations
 

@@ -9,7 +9,7 @@ from constants import BG_LAYER_NAME, SHORT_NAME_INFIX_SEPARATOR, Y_POS_CSV_HEADE
 from util import make_out_dir, size_from_height, ImageOpt
 from button_sequence import ButtonSequence
 
-DEBUG_LOG_IMAGESET = True
+DEBUG_LOG_IMAGESET = False
 ENABLE_RESIZE = True
 USE_THREADING_EXPERIMENTAL = False  # Causes truncated image rendering, buggy
 

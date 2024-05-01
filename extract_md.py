@@ -107,7 +107,7 @@ class ExtractButtonsFromMarkdown:
             if sequence_map:
                 result = ButtonSequence(sequence_map, tablerow.line_number)
         elif mismatch and DEBUG_LOG_EXTRACT:
-            print(f"ignored cell: {mismatch}", file=sys.stderr)
+            print(f"ignored cell at {tablerow.line_number}: {mismatch}", file=sys.stderr)
 
         return result
 
