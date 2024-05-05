@@ -4,9 +4,11 @@ from button_sequence import ButtonSequence
 from modify_md import format_markdown, write_markdown
 from imageset_gen import ImageSet, ImageOpt
 from psd_gen import PSDInMd
+from write_seqs_md import write_seqs_markdown
 
 # noinspection PyUnresolvedReferences
-mdpicgen_ignore = extract_button_sequences, format_image_basename, ButtonSequence, format_markdown, write_markdown
+mdpicgen_ignore = (extract_button_sequences, format_image_basename, ButtonSequence, format_markdown, write_markdown,
+                   write_seqs_markdown)
 
 
 def process_psd(out_dirname, psd_filename, basenames, height):

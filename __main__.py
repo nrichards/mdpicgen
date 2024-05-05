@@ -2,7 +2,7 @@ import sys
 import os
 
 from mdpicgen import (format_markdown, process_psd, process_imageset, extract_button_sequences, write_markdown,
-                      ImageOpt)
+                      ImageOpt, write_seqs_markdown)
 
 DEBUG_LOG_MAIN = True
 
@@ -29,6 +29,8 @@ if __name__ == '__main__':
                         help="Output filename for Input Markdown with updated image links.")
     parser.add_argument("--image-out-dir", default='out', type=str,
                         help="Output directory name for composited images, will be created (Default: 'out').")
+    parser.add_argument("--md-seqs-out-file", type=str,
+                        help="Output filename for only button sequences and image links in Markdown.")
 
     parser.add_argument("--button-pattern-file", default=f"{script_dir}/qunmk2.patset", type=str,
                         help="Pattern filename for matching buttons (Default: 'qunmk2.patset').")
@@ -109,6 +111,15 @@ if __name__ == '__main__':
         except Exception as e:
             print(f"Aborting. Error writing markdown: {e}", file=sys.stderr)
             exit(1)
+
+    if args.md_seqs_out_file:
+        try:
+            markdown = write_seqs_markdown(args.md_seqs_out_file, args.image_out_dir, args.md_file, button_sequences,
+                                           ImageOpt(args.image_height, gif=args.gif))
+        except Exception as e:
+            print(f"Aborting. Error writing markdown: {e}", file=sys.stderr)
+            # exit(1)
+            raise e
 
     if args.print_formatted:
         formatted_text = format_markdown(args.md_file)

@@ -1,4 +1,7 @@
 from pathlib import Path
+from typing import Iterable
+
+from mistletoe.token import Token
 
 from constants import GIF_IMAGE_EXTENSION, PNG_IMAGE_EXTENSION, SHORT_NAME_INFIX_SEPARATOR
 
@@ -90,3 +93,27 @@ def strip_whitespace(sequence):
 
 def find_first_non_null_index(a_list):
     return next((i for i, x in enumerate(a_list) if x is not None), -1)
+
+
+def print_markdown_tree(mistletoe_children: [Token], level=0):
+    """
+    print a formatted tree to stdout of mistletoe Tokens
+    :param mistletoe_children: list of mistletoe Tokens
+    :param level: 
+    :return: 
+    """
+    padding = "|   "
+    children = mistletoe_children
+
+    if not is_iterable(children):
+        return
+
+    for child in children:
+        if hasattr(child, 'children') and child.children:
+            current = padding * level + str(child)
+            print(current)
+            print_markdown_tree(child.children, level + 1)
+
+
+def is_iterable(obj):
+    return isinstance(obj, Iterable)
