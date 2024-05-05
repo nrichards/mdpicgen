@@ -102,16 +102,21 @@ def print_markdown_tree(mistletoe_children: [Token], level=0):
     :param level: 
     :return: 
     """
+    def print_helper():
+        current = padding * level + str(child)
+        print(current)
+
     padding = "|   "
     children = mistletoe_children
 
     if not is_iterable(children):
+        print_helper()
         return
 
     for child in children:
+        print_helper()
+        
         if hasattr(child, 'children') and child.children:
-            current = padding * level + str(child)
-            print(current)
             print_markdown_tree(child.children, level + 1)
 
 
