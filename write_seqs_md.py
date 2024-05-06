@@ -1,4 +1,3 @@
-from pathlib import Path
 
 import mistletoe
 from mistletoe.block_token import Paragraph, TableCell, TableRow, Table
@@ -31,25 +30,95 @@ def write_seqs_markdown(md_out_file, image_out_path, md_in_file, button_sequence
         return
 
     with (open(md_out_file, "w") as fout):
-        with MarkdownRenderer(max_line_length=99) as renderer:
+        with MarkdownRenderer() as renderer:
             ButtonSequence.init_description(button_sequences, renderer)
             print(button_sequences)
             
             # TODO Derive category from description text, mapping keywords to known categories, using the best match
+            # TODO Create columns 
+            # TODO Create tables
             
-            text = Path("test_seqs.md").read_text()
-            doc = mistletoe.Document(text)
-            print_markdown_tree(doc.children)
-            print("rendering ...")
-            md = renderer.render(doc)
-            print(md)
+            # text = Path("test_seqs.md").read_text()
+            # doc = mistletoe.Document(text)
+            # print_markdown_tree(doc.children)
+            # print("rendering ...")
+            # md = renderer.render(doc)
+            # print(md)
 
             # #####
-            print("next ...")
+            # print("next ...")
 
             doc = mistletoe.Document("")
             
-            doc.children.extend(create_title_list())
+            last_table_title = ""
+            for seq in button_sequences:
+                if last_table_title is not seq.section:
+                    last_table_title = seq.section
+                    doc.children.extend(create_title_list(last_table_title))
+                
+                ## System control
+                # Device
+                # Mode
+                # Sub-mode
+                # Sequencer
+                # Looper
+                ## Performance
+                # MIDI and presets
+                # Sound signal performance
+                # Note performance
+                ## Session and Looper data
+                # Info
+                # Load
+                # Save
+                ## Sequencer
+                # Control
+                # Performance
+                # Edit
+                ## Play Mode: SEQ CFG sub-mode
+                # Performance: Run multiple sequence patterns at the same time
+                ## Looper
+                # Navigation
+                # Performance
+                # Edit
+                ## Sequencer Parameter Locking
+                # Navigation
+                # Edit
+                ## Granular
+                # Edit
+                # Navigate
+                # Record
+                # Load
+                ## Vinyl Record Scratch
+                # Scratch
+                # Rewind
+                # Mute
+
+
+                # TODO Order in selection priority
+                x = {
+                'Control': [],
+                'Device': ['sleep', 'reset', 'board'],
+                'Edit': ['copy', 'paste', 'undo', 'clear', 'change'],
+                'Info': ['show', 'scroll'],
+                'Load': ['load'],
+                'Looper': ['looper'],
+                'MIDI and presets': ['midi'],
+                'Mode': ['mode', 'status page'],
+                'Mute': ['mute'],
+                'Navigate': ['select', 'scene', 'navigate', 'previous', 'next'],
+                'Note performance': [],
+                'Perform': ['playing'],
+                'Performance: Run multiple sequence patterns at the same time': [],
+                'Record': ['recording'],
+                'Rewind': ['rewind'],
+                'Save': ['save'],
+                'Scratch': ['scratch', 'record'],
+                'Sequencer': ['sequencer'],  # Sequencer performance
+                'Sound signal performance': [],
+                'Sub-mode': ['sub-mode', 'parameters'],
+                }
+
+                
 
             headers = to_table_line(["Thing1", "Thing2", "Thing3"])
             header_aligns = to_table_line(["--"], 3)
@@ -79,7 +148,7 @@ def write_seqs_markdown(md_out_file, image_out_path, md_in_file, button_sequence
             fout.write(md)
 
 
-def create_title_list(text="title", line_number=1):
+def create_title_list(text, line_number=1):
     return [create_blankline(), create_paragraph(text, line_number), create_blankline()]
 
 
