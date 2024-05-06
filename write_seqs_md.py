@@ -1,4 +1,3 @@
-
 import mistletoe
 from mistletoe.block_token import Paragraph, TableCell, TableRow, Table
 from mistletoe.markdown_renderer import MarkdownRenderer, BlankLine
@@ -13,7 +12,7 @@ DEBUG_LOG_SEQS = True
 
 
 def write_seqs_markdown(md_out_file, image_out_path, md_in_file, button_sequences: [ButtonSequence], opt: ImageOpt):
-    """
+    """Create a Markdown file collecting just the button sequences, grouped and sub-grouped.
 
     :param md_out_file: Destination of collected button sequences, in Markdown
     :param image_out_path: 
@@ -33,11 +32,11 @@ def write_seqs_markdown(md_out_file, image_out_path, md_in_file, button_sequence
         with MarkdownRenderer() as renderer:
             ButtonSequence.init_description(button_sequences, renderer)
             print(button_sequences)
-            
+
             # TODO Derive category from description text, mapping keywords to known categories, using the best match
             # TODO Create columns 
             # TODO Create tables
-            
+
             # text = Path("test_seqs.md").read_text()
             # doc = mistletoe.Document(text)
             # print_markdown_tree(doc.children)
@@ -49,53 +48,10 @@ def write_seqs_markdown(md_out_file, image_out_path, md_in_file, button_sequence
             # print("next ...")
 
             doc = mistletoe.Document("")
-            
-            last_table_title = ""
-            for seq in button_sequences:
-                if last_table_title is not seq.section:
-                    last_table_title = seq.section
-                    doc.children.extend(create_title_list(last_table_title))
-                
-                ## System control
-                # Device
-                # Mode
-                # Sub-mode
-                # Sequencer
-                # Looper
-                ## Performance
-                # MIDI and presets
-                # Sound signal performance
-                # Note performance
-                ## Session and Looper data
-                # Info
-                # Load
-                # Save
-                ## Sequencer
-                # Control
-                # Performance
-                # Edit
-                ## Play Mode: SEQ CFG sub-mode
-                # Performance: Run multiple sequence patterns at the same time
-                ## Looper
-                # Navigation
-                # Performance
-                # Edit
-                ## Sequencer Parameter Locking
-                # Navigation
-                # Edit
-                ## Granular
-                # Edit
-                # Navigate
-                # Record
-                # Load
-                ## Vinyl Record Scratch
-                # Scratch
-                # Rewind
-                # Mute
 
 
-                # TODO Order in selection priority
-                x = {
+            # TODO Order in selection priority
+            categories = {
                 'Control': [],
                 'Device': ['sleep', 'reset', 'board'],
                 'Edit': ['copy', 'paste', 'undo', 'clear', 'change'],
@@ -116,49 +72,60 @@ def write_seqs_markdown(md_out_file, image_out_path, md_in_file, button_sequence
                 'Sequencer': ['sequencer'],  # Sequencer performance
                 'Sound signal performance': [],
                 'Sub-mode': ['sub-mode', 'parameters'],
-                }
+            }
 
+            def print_prior_table_contents():
+                headers = to_table_line(["Thing1", "Thing2", "Thing3"])
+                header_aligns = to_table_line(["--"], 3)
+                header_text = headers + header_aligns
+                columns = ["SHIFT + B1 <br> ![label-1.1](link-1.1) <br> Cell 1.1 text",
+                           "SHIFT + B2 <br> ![label-2.1](link-2.1) <br> Cell 2.1 text",
+                           "SHIFT + B3 <br> ![label-3.1](link-3.1) <br> Cell 3.1 text"]
+                rows = [columns[0],
+                        "SHIFT + B1 <br> ![label-1.2](link-1.2) <br> Cell 1.2 text",
+                        "SHIFT + B1 <br> ![label-1.3](link-1.3) <br> Cell 1.3 text"]
+                row_text = to_table_line(rows)
+                table_text = header_text + row_text
+                doc.children.append(create_table(table_text))
+            
+            def print_next_section_title(title) -> str:
+                doc.children.extend(create_title_list(title))
+                return title
+
+            last_table_title = ""
+            for seq in button_sequences:
+                if last_table_title is not seq.section:
+                    print_prior_table_contents()
+                    
+                    last_table_title = print_next_section_title(seq.section)
+                    
+                # Process a sequence
                 
+                # TODO Build a list of categories
+                # TODO Decide on a category for each line
+                # TODO Dump all the categories at once, zipping them together
 
-            headers = to_table_line(["Thing1", "Thing2", "Thing3"])
-            header_aligns = to_table_line(["--"], 3)
-            header_text = headers + header_aligns
-            columns = ["SHIFT + B1 <br> ![label-1.1](link-1.1) <br> Cell 1.1 text",
-                       "SHIFT + B2 <br> ![label-2.1](link-2.1) <br> Cell 2.1 text",
-                       "SHIFT + B3 <br> ![label-3.1](link-3.1) <br> Cell 3.1 text"]
-            rows = [columns[0],
-                    "SHIFT + B1 <br> ![label-1.2](link-1.2) <br> Cell 1.2 text",
-                    "SHIFT + B1 <br> ![label-1.3](link-1.3) <br> Cell 1.3 text"]
-            row_text = to_table_line(rows)
-            table_text = header_text + row_text
+            # Last table
+            print_prior_table_contents()
 
-            doc.children.append(create_table(table_text))
 
-            doc.children.extend(create_title_list("title 2"))
-            doc.children.append(create_table(table_text))
-
-            doc.children.extend(create_title_list("title 3"))
-            doc.children.append(create_table(table_text))
-
-            # print_markdown_tree(doc.children)
             print("rendering ...")
             md = renderer.render(doc)
-            # print(md)
-
             fout.write(md)
 
 
 def create_title_list(text, line_number=1):
-    return [create_blankline(), create_paragraph(text, line_number), create_blankline()]
+    return [create_blankline(line_number), create_paragraph(text, line_number), create_blankline()]
 
 
 def create_table(table_text):
     table = Table((table_text, 1))
+    # TRICKY: line_number is required and is not set in the constructor, only in block_token.tokenize()
     table.line_number = 1
     return table
 
 
-def to_table_line(elements:[str], column_count = 0) -> [str]:
+def to_table_line(elements: [str], column_count=0) -> [str]:
     cc = 1
     if column_count:
         cc = column_count
@@ -166,57 +133,69 @@ def to_table_line(elements:[str], column_count = 0) -> [str]:
 
 
 def create_paragraph(text, line_number=1) -> [Token]:
-    """
-    
-    :param text: 
-    :param line_number: 
-    :return: 
-    <mistletoe.block_token.Paragraph with 1 child line_number=2 at 0x101da5890>
-    |   <mistletoe.span_token.RawText content='Title 1' at 0x101da5610>
-    """
     lines = [text + " \n"]
     result = Paragraph(lines)
-
     # TRICKY: line_number is required and is not set in the constructor, only in block_token.tokenize()
     result.line_number = line_number
-
     return result
 
 
-def create_blankline():
+def create_blankline(line_number=1):
     result = BlankLine([""])
-    result.line_number = 1
+    # TRICKY: line_number is required and is not set in the constructor, only in block_token.tokenize()
+    result.line_number = line_number
     return result
 
 
 def create_cell(text: str, line_number=1) -> [TableCell]:
-    """
-
-    :param line_number: 
-    :param text: 
-    :param param: 
-    :return: 
-    <mistletoe.block_token.TableCell with 7 children line_number=6 align=0 at 0x105548ad0>
-    |   <mistletoe.span_token.RawText content='SHIFT + B1 ' at 0x10554b5d0>
-    |   <mistletoe.span_token.HtmlSpan content='<br>' at 0x10554b610>
-    |   <mistletoe.span_token.RawText content=' ' at 0x10554b4d0>
-    |   <mistletoe.span_token.Image with 1 child src='link-1.1' title='' at 0x10554b950>
-    |   |   <mistletoe.span_token.RawText content='label-1.1' at 0x105549110>
-    |   <mistletoe.span_token.RawText content=' ' at 0x10554b9d0>
-    |   <mistletoe.span_token.HtmlSpan content='<br>' at 0x10554b890>
-    |   <mistletoe.span_token.RawText content=' Cell 1.2 text' at 0x10554bc10>
-    """
-
     lines = [text + " \n"]
     result = TableCell(lines)
-
     # TRICKY: line_number is required and is not set in the constructor, only in block_token.tokenize()
     result.line_number = line_number
-
     return result
 
 
 def create_row(row_text, line_number=1) -> TableRow:
     result = TableRow(row_text)
+    # TRICKY: line_number is required and is not set in the constructor, only in block_token.tokenize()
     result.line_number = line_number
     return result
+
+
+
+    ## System control
+    # Device
+    # Mode
+    # Sub-mode
+    # Sequencer
+    # Looper
+    ## Performance
+    # MIDI and presets
+    # Sound signal performance
+    # Note performance
+    ## Session and Looper data
+    # Info
+    # Load
+    # Save
+    ## Sequencer
+    # Control
+    # Performance
+    # Edit
+    ## Play Mode: SEQ CFG sub-mode
+    # Performance: Run multiple sequence patterns at the same time
+    ## Looper
+    # Navigation
+    # Performance
+    # Edit
+    ## Sequencer Parameter Locking
+    # Navigation
+    # Edit
+    ## Granular
+    # Edit
+    # Navigate
+    # Record
+    # Load
+    ## Vinyl Record Scratch
+    # Scratch
+    # Rewind
+    # Mute
