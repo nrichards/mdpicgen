@@ -1,20 +1,16 @@
 from pathlib import Path
 
 import mistletoe
-from mistletoe.token import Token
-from mistletoe.block_token import BlockToken, Heading, Paragraph, SetextHeading, TableCell, TableRow, Table
-from mistletoe.span_token import InlineCode, RawText, SpanToken
+from mistletoe.block_token import Paragraph, TableCell, TableRow, Table
 from mistletoe.markdown_renderer import MarkdownRenderer, BlankLine
+from mistletoe.token import Token
 
-from modify_md import validate_files
 from button_sequence import ButtonSequence
+from modify_md import validate_files
 from util import ImageOpt, print_markdown_tree  # noqa: F401
 
 # For debugging parsing
 DEBUG_LOG_SEQS = True
-
-
-# TODO Format the output file with mistletoe
 
 
 def write_seqs_markdown(md_out_file, image_out_path, md_in_file, button_sequences: [ButtonSequence], opt: ImageOpt):
@@ -100,69 +96,6 @@ def to_table_line(elements:[str], column_count = 0) -> [str]:
     return ["|".join(elements * cc) + "\n"]
 
 
-def update_text(token: SpanToken):
-    """Update the text contents of a span token and its children.
-    `InlineCode` tokens are left unchanged."""
-    if isinstance(token, RawText):
-        token.content = token.content.replace("mistletoe", "The Amazing mistletoe")
-
-    if not isinstance(token, InlineCode) and hasattr(token, "children"):
-        for child in token.children:
-            update_text(child)
-
-
-def update_block(token: BlockToken):
-    """Update the text contents of paragraphs and headings within this block,
-    and recursively within its children."""
-    if isinstance(token, (Paragraph, SetextHeading, Heading)):
-        for child in token.children:
-            update_text(child)
-
-    for child in token.children:
-        if isinstance(child, BlockToken):
-            update_block(child)
-
-
-# def generate_markdown_table(data):
-#     """Generates markdown table with 4 columns from a list of data.
-#   
-#     Args:
-#         data: A list of lists, where each inner list represents a row in the table.
-#   
-#     Returns:
-#         A string containing the markdown representation of the table.
-#     """
-#     markdown = ""
-#     table = Table(headings=["Column 1", "Column 2", "Column 3", "Column 4"])
-# 
-#     for row in data:
-#         if len(row) != 4:
-#             raise ValueError("Each row in data must have 4 elements.")
-#         table_row = TableRow([TableCell(c) for c in row])
-#         table.add_child(table_row)
-# 
-#     markdown += table.render()
-#     return markdown
-# 
-# # Sample data for the table
-# data = [
-#     ["Data 1-1", "Data 1-2", "Data 1-3", "Data 1-4"],
-#     ["Data 2-1", "Data 2-2", "Data 2-3", "Data 2-4"],
-#     # Add more rows as needed
-# ]
-# 
-# # Generate markdown string
-# markdown_string = generate_markdown_table(data)
-# 
-# # Write markdown string to a file
-# with open("output.md", "w") as f:
-#     f.write(markdown_string)
-# 
-# # Render markdown to HTML (optional)
-# # renderer = Markdown()
-# # html_output = renderer.render(markdown_string)
-# # print(html_output)
-
 def create_paragraph(text, line_number=1) -> [Token]:
     """
     
@@ -180,14 +113,11 @@ def create_paragraph(text, line_number=1) -> [Token]:
 
     return result
 
+
 def create_blankline():
     result = BlankLine([""])
     result.line_number = 1
     return result
-
-
-def create_cell_from_tokens(tokens: [Token], line_number=1) -> [TableCell]:
-    pass
 
 
 def create_cell(text: str, line_number=1) -> [TableCell]:
