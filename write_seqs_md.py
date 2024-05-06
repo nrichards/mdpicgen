@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import mistletoe
 from mistletoe.token import Token
 from mistletoe.block_token import BlockToken, Heading, Paragraph, SetextHeading, TableCell, TableRow, Table
@@ -6,7 +8,7 @@ from mistletoe.markdown_renderer import MarkdownRenderer, BlankLine
 
 from modify_md import validate_files
 from button_sequence import ButtonSequence
-from util import ImageOpt, print_markdown_tree
+from util import ImageOpt, print_markdown_tree  # noqa: F401
 
 # For debugging parsing
 DEBUG_LOG_SEQS = True
@@ -33,34 +35,25 @@ def write_seqs_markdown(md_out_file, image_out_path, md_in_file, button_sequence
         return
 
     with (open(md_out_file, "w") as fout):
-        with MarkdownRenderer() as renderer:
-            text = """
-Title 1
-
-| Heading 1 | Heading 2 | Heading 3 |
-| :--: | -- | -- |
-| SHIFT + B1 <br> ![label-1.1](link-1.1) <br> Cell 1.2 text | SHIFT + B3 <br> ![label-1.3](link-1.3) <br> Cell 1.3 text | SHIFT + B4 <br> ![label-1.4](link-1.4) <br> Cell 1.4 text |
-| SHIFT + B2 <br> ![label-2.1](link-2.1) <br> Cell 2.2 text | SHIFT + B2 <br> ![label-2.1](link-2.1) <br> Cell 2.3 text | SHIFT + B4 <br> ![label-2.4](link-2.4) <br> Cell 2.4 text |
-
-Title 2
-
-| Heading 2.1 | Heading 2.2 | 
-| :--: | -- | 
-| SHIFT + B6 <br> ![label-1.1](link-1.1) <br> Cell 1.2 text | SHIFT + B7 <br> ![label-1.7](link-1.1) <br>Cell 1.3 text |
-| SHIFT + B6 <br> ![label-2.1](link-2.1) <br> Cell 2.2 text | SHIFT + B7 <br> ![label-2.7](link-2.1) <br>Cell 2.3 text |
-"""
-            # doc = mistletoe.Document(text)
-            # print_markdown_tree(doc.children)
-            # print("rendering ...")
-            # md = renderer.render(doc)
-            # print(md)
+        with MarkdownRenderer(max_line_length=99) as renderer:
+            ButtonSequence.init_description(button_sequences, renderer)
+            print(button_sequences)
+            
+            # TODO Derive category from description text, mapping keywords to known categories, using the best match
+            
+            text = Path("test_seqs.md").read_text()
+            doc = mistletoe.Document(text)
+            print_markdown_tree(doc.children)
+            print("rendering ...")
+            md = renderer.render(doc)
+            print(md)
 
             # #####
-            # print("next ...")
+            print("next ...")
 
             doc = mistletoe.Document("")
             
-            doc.children.extend([create_paragraph("title"), create_blankline()])
+            doc.children.extend(create_title_list())
 
             headers = to_table_line(["Thing1", "Thing2", "Thing3"])
             header_aligns = to_table_line(["--"], 3)
@@ -76,20 +69,22 @@ Title 2
 
             doc.children.append(create_table(table_text))
 
-            doc.children.extend([create_paragraph("title 2"), create_blankline()])
-            
+            doc.children.extend(create_title_list("title 2"))
             doc.children.append(create_table(table_text))
 
-            doc.children.extend([create_paragraph("title 3"), create_blankline()])
-
+            doc.children.extend(create_title_list("title 3"))
             doc.children.append(create_table(table_text))
 
-            print_markdown_tree(doc.children)
+            # print_markdown_tree(doc.children)
             print("rendering ...")
             md = renderer.render(doc)
             # print(md)
 
             fout.write(md)
+
+
+def create_title_list(text="title", line_number=1):
+    return [create_blankline(), create_paragraph(text, line_number), create_blankline()]
 
 
 def create_table(table_text):

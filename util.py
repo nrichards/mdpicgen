@@ -102,6 +102,7 @@ def print_markdown_tree(mistletoe_children: [Token], level=0):
     :param level: 
     :return: 
     """
+
     def print_helper():
         current = padding * level + str(child)
         print(current)
@@ -115,10 +116,34 @@ def print_markdown_tree(mistletoe_children: [Token], level=0):
 
     for child in children:
         print_helper()
-        
+
         if hasattr(child, 'children') and child.children:
             print_markdown_tree(child.children, level + 1)
 
 
 def is_iterable(obj):
     return isinstance(obj, Iterable)
+
+
+def find_nearest_less_than_or_equal(list_of_tuples: [(int, str)], search_value):
+    """Finds the nearest less-than-or-equal number from a list of tuples.
+  
+    Args:
+        list_of_tuples: A list of tuples where the first element is an integer.
+        search_value: The integer to search for.
+  
+    Returns:
+        A tuple containing the nearest less-than-or-equal number and its corresponding data,
+         or None if no such number exists.
+    """
+    closest_value = None
+    closest_data = None
+
+    for num, _ in list_of_tuples:
+        if num <= search_value:
+            # Update if closer or the first match
+            if closest_value is None or num >= closest_value:
+                closest_value = num
+                closest_data = _
+
+    return closest_value, closest_data

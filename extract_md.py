@@ -1,18 +1,21 @@
 import re
+
 import sys
 from collections import Counter
 
-from mistletoe.block_token import Table, TableRow, Document, TableCell
+from mistletoe.block_token import Table, TableRow, Document, TableCell, Heading
 from mistletoe.markdown_renderer import MarkdownRenderer
 from mistletoe.span_token import RawText, HtmlSpan
 
 from button_sequence import ButtonSequence
 from constants import HTML_BREAK_PATTERN, DIGITS_MACRO_NAME
-from util import extract_digit_ranges, strip_whitespace, find_first_non_null_index
+from util import (extract_digit_ranges, strip_whitespace, find_first_non_null_index, print_markdown_tree, 
+                  find_nearest_less_than_or_equal)
 from patset import patterns_to_header, patterns_to_separators, patterns_map_to_button_name
 
 # For debugging parsing
 DEBUG_LOG_EXTRACT = True
+DEBUG_LEVEL_DEEP = True
 
 EXTRACT_CAPTURE_GROUP_INDEX = 1
 
@@ -55,7 +58,10 @@ class ExtractButtonsFromMarkdown:
         with open(markdown_filename, "r") as fin:
             with MarkdownRenderer(normalize_whitespace=True) as _:
                 document = Document(fin)
-
+                
+                if DEBUG_LOG_EXTRACT and DEBUG_LEVEL_DEEP:
+                    print_markdown_tree(document.children)
+    
                 # Extract buttons, following constraints and patterns, and store results
                 result = self.extract_document(document)
                 self.button_sequences = result
@@ -67,19 +73,25 @@ class ExtractButtonsFromMarkdown:
         :param doc: Any Markdown
         :return: Matches for structure and text pattern criteria
         """
+        
+        heading_lines = [(token.line_number, token.children[0].content) 
+                         for token in doc.children if type(token) is Heading]
+        
         result = [
-            sequence
+            xx
             for token in doc.children if type(token) is Table
-            for sequence in self.extract_table(token)
+            for xx in self.extract_titled_table(token, heading_lines)
         ]
 
         return result
 
-    def extract_table(self, table: Table) -> [ButtonSequence]:
+    def extract_titled_table(self, table: Table, heading_lines:[(int, str)]) -> (str, [ButtonSequence]):
+        _, heading = find_nearest_less_than_or_equal(heading_lines, table.line_number)
+
         result = []
 
         if ExtractButtonsFromMarkdown.is_button_table(table, self.header.lower()):
-            extracted = [self.extract_tablerow(child) for child in table.children]
+            extracted = [self.extract_tablerow(child, heading) for child in table.children]
             result = [e for e in extracted if e]
 
         return result
@@ -89,10 +101,11 @@ class ExtractButtonsFromMarkdown:
         label = table.header.children[0].children[0]
         return type(label) is RawText and label.content.lower().startswith(header)
 
-    def extract_tablerow(self, tablerow: TableRow) -> ButtonSequence:
+    def extract_tablerow(self, tablerow: TableRow, section_title) -> ButtonSequence:
         """
         Extracts valid data from cells in first column of table.
          
+        :param section_title: 
         :param tablerow: candidate data needing examination
         :return: A ButtonSequence object or None if no valid data is found
         """
@@ -105,7 +118,10 @@ class ExtractButtonsFromMarkdown:
             sequence_map = self.extract_rawtext(valid_token)
 
             if sequence_map:
-                result = ButtonSequence(sequence_map, tablerow.line_number)
+                description_tablecell = tablerow.children[1]
+                print("DESC: " + str(description_tablecell))
+                result = ButtonSequence(mapping=sequence_map, line_no=tablerow.line_number, section_title=section_title,
+                                        description_tablecell=description_tablecell)
         elif mismatch and DEBUG_LOG_EXTRACT:
             print(f"ignored cell at {tablerow.line_number}: {mismatch}", file=sys.stderr)
 
