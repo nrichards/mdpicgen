@@ -1,0 +1,26 @@
+label_or_section, name, keyword_1, keyword_2, keyword_3, keyword_4, keyword_5, keyword_6, keyword_7, keyword_8, keyword_9, keyword_10, keyword_11, keyword_12, keyword_13, keyword_14, keyword_15
+__label__, Mode, mode, status page
+__label__, Sub-mode, sub-mode, parameters
+__label__, Scratch, scratch, record
+__label__, Looper, looper
+__label__, Edit, copy, paste, undo, clear, change, detune, length, starting, slice, process, volume, cutoff, tune
+__label__, Load and save, load, save, name
+__label__, MIDI and presets, midi
+__label__, Navigate, select, scene, navigate, previous, next, show, scroll, toggle, move, same
+__label__, Perform, __default__, playing, pattern, swing, morph, note, modify, bpm, switch, mute, rewind
+__label__, Record, recording
+__label__, Sequencer, sequencer
+__label__, Device, sleep, reset, board
+__section__, Vinyl record scratch, Vinyl record scratch mode
+__section__, Granular, Operation
+__section__, Performance, BASIC SHORTCUTS, Preset Bucket, Load Preset
+__section__, System control, Advanced operation, Extra Processing
+__section__, Session, Session
+__section__, Sequencer, COMMON SEQUENCER OPERATIONS, Sequencer live recording, Parameter Locking, Running multiple sequence patterns
+__section__, Looper, COMMON LOOPER OPERATIONS, Looper overview
+__section__, PLY:SEQ VELOCITY / WIDTH / PROBABILITY, PLY:SEQ VELOCITY / WIDTH / PROBABILITY
+__section__, PLY:MIXER, PLY:MIXER
+__section__, PRM:KEY/OTHER, PRM:KEY/OTHER
+__section__, PLY:SEQ TUNE, PLY:SEQ TUNE
+__section__, Monitor mode, Monitor mode
+

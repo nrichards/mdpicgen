@@ -1,7 +1,8 @@
 from mistletoe.block_token import TableCell
 from mistletoe.markdown_renderer import MarkdownRenderer
 
-from util import format_image_basename
+import util
+from util import format_image_basename, truncate
 
 
 class ButtonSequence:
@@ -10,8 +11,8 @@ class ButtonSequence:
     line_number: int
     basename: str = ""
     section: str = ""
-    
-    description: str = "" 
+
+    description: str = ""
     """Set with set_descriptions(), below."""
 
     def __init__(self, *, mapping, line_no, section_title, description_tablecell: TableCell):
@@ -28,12 +29,18 @@ class ButtonSequence:
             self.__class__.__name__,
             self.sequence_mapping,
             self.line_number,
-            self.section,
+            truncate(self.section),
             self.description_tablecell is not None,
-            self.description,
+            truncate(self.description),
             self.basename,
             id(self),
         )
+
+    def description_printable(self, elide: bool = False):
+        result = self.description.replace('\n', ' ')
+        if elide:
+            result = util.truncate(result)
+        return result
 
     @staticmethod
     def to_sequence_mapping_list(button_sequences: ["ButtonSequence"]):

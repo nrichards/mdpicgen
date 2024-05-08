@@ -2,7 +2,7 @@
 
 Helps keep Markdown editing fun.
 
-This tool reads string sequences from Markdown and generates custom visuals using custom image layers. Inserts or updates images back in to the Markdown.
+This tool reads string sequences from Markdown and generates custom visuals using custom image layers. Adds images back to Markdown.
 
 * "really cool!" -_a personal friend of the developer_
 
@@ -26,9 +26,9 @@ So updating 60+ structured images and their Markdown links is work worthy of aut
 
 **After**, adds images:
 
-|                          Button                          | Description                                |
-|:--------------------------------------------------------:|--------------------------------------------|
-| SHIFT + SEQ PLAY + turn dial <br> ![](doc/s_splay_d.png) |                                            |
+|                          Button                          | Description |
+|:--------------------------------------------------------:|-------------|
+| SHIFT + SEQ PLAY + turn dial <br> ![](doc/s_splay_d.png) |             |
 
 _**and** can make animated GIFs:_
 
@@ -41,6 +41,7 @@ _**and** can make animated GIFs:_
 * **Extract sequences of names of button controls** directly from tables in Markdown, based upon patterns from a customizable file
 * **Generate images for each sequence**, from the layers of a customizable illustration
 * **Update the original Markdown**, and add missing or update outdated image links, without imposing auto-reformatting on potentially hand-edited (dense) tables
+* **Create a new sequence-only Markdown**, only containing the button sequences and their images
 
 # Usage
 
@@ -53,17 +54,20 @@ _**and** can make animated GIFs:_
 
 ```
 usage: mdpicgen [-h] --md-file MD_FILE [--md-out-file MD_OUT_FILE]
+                [--md-seqs-out-file MD_SEQS_OUT_FILE]
                 [--image-out-dir IMAGE_OUT_DIR]
                 [--button-pattern-file BUTTON_PATTERN_FILE]
+                [--category-pattern-file CATEGORY_PATTERN_FILE]
                 [--image-height IMAGE_HEIGHT] [--gif] [--print-formatted]
                 [--print-extract]
                 {imageset,psd} ...
 
 Parse Markdown table cells into recognized sequences of strings, "keys". Only
 matches keys from table columns all identified by patterns in the button-
-pattern-file. Inserts and updates links for image files to output Markdown, in
-the cells after the keys. Generate images using image layers, named based upon
-the keys -- see sub-commands for image generation details.
+pattern-file. Inserts and updates links for image files to output Markdown in
+the cells after the keys. Creates a sequence-only Markdown with tables
+categorizing the sequences. Generate images using image layers, named based
+upon the keys -- see sub-commands for image generation details.
 
 options:
   -h, --help            show this help message and exit
@@ -71,12 +75,19 @@ options:
   --md-out-file MD_OUT_FILE
                         Output filename for Input Markdown with updated image
                         links.
+  --md-seqs-out-file MD_SEQS_OUT_FILE
+                        Output filename for sequence-only Markdown, with
+                        categorized tables of button sequences and image
+                        links.
   --image-out-dir IMAGE_OUT_DIR
                         Output directory name for composited images, will be
                         created (Default: 'out').
   --button-pattern-file BUTTON_PATTERN_FILE
                         Pattern filename for matching buttons (Default:
                         'qunmk2.patset').
+  --category-pattern-file CATEGORY_PATTERN_FILE
+                        Category pattern filename for organizing sequences
+                        (Default: 'qunmk2_categories.csv').
   --image-height IMAGE_HEIGHT
                         Pixel height of generated images, used with sub-
                         commands (Default: 48).

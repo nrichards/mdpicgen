@@ -14,7 +14,7 @@ from util import (extract_digit_ranges, strip_whitespace, find_first_non_null_in
 from patset import patterns_to_header, patterns_to_separators, patterns_map_to_button_name
 
 # For debugging parsing
-DEBUG_LOG_EXTRACT = True
+DEBUG_LOG_EXTRACT = False
 DEBUG_LEVEL_DEEP = True
 
 EXTRACT_CAPTURE_GROUP_INDEX = 1
@@ -119,7 +119,6 @@ class ExtractButtonsFromMarkdown:
 
             if sequence_map:
                 description_tablecell = tablerow.children[1]
-                print("DESC: " + str(description_tablecell))
                 result = ButtonSequence(mapping=sequence_map, line_no=tablerow.line_number, section_title=section_title,
                                         description_tablecell=description_tablecell)
         elif mismatch and DEBUG_LOG_EXTRACT:
