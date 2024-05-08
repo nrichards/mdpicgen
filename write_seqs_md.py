@@ -1,12 +1,15 @@
 import sys
 from itertools import pairwise
 from dataclasses import dataclass
+import csv
 
 from mistletoe.block_token import Paragraph, Table, Document
 from mistletoe.markdown_renderer import MarkdownRenderer, BlankLine
 from mistletoe.token import Token
 
 from button_sequence import ButtonSequence
+from constants import LABEL_OR_SECTION_CSV_HEADER, SECTION_KEY, LABEL_KEY, NAME_KEY, KEYWORD_N_KEY_COUNT, \
+    KEYWORD_N_PREFIX_KEY, DEFAULT_NAME_KEY
 from modify_md import validate_files
 from util import ImageOpt, print_markdown_tree, find_category_names  # noqa: F401
 
@@ -14,34 +17,47 @@ from util import ImageOpt, print_markdown_tree, find_category_names  # noqa: F40
 DEBUG_LOG_SEQS = True
 
 
-def write_seqs_markdown(md_out_file, image_out_path, md_in_file, category_pattern_file, 
+def write_seqs_markdown(md_out_file, image_out_path, md_in_file, category_pattern_file,
                         button_sequences: [ButtonSequence], opt: ImageOpt):
     ws = WriteSequences()
     ws.write_seqs_markdown(md_out_file, image_out_path, md_in_file, category_pattern_file, button_sequences, opt)
 
 
+@dataclass
+class SequenceCategory:
+    """Names and keywords to match to names, for categorizing sequences.
+    
+    Sequences can be categorized into high level Sections and lower level Labels. 
+    The categorization process uses keywords, heuristically matched to a section/label name, from within the
+    name of the sequence or the nearest organizing heading in the document."""
+    is_section: bool
+    name: str
+    keywords: [str]
+    is_default: bool
+
+
 class WriteSequences:
     # TODO store in combosheet file
-    categories = {
-        'Sub-mode': ['sub-mode', 'parameters'],  # prioritize
-        'Sequencer': ['sequencer'],
-
-        'Edit': ['copy', 'paste', 'undo', 'clear', 'change', 'detune', 'length', 'starting', 'slice', 'process',
-                 'volume', 'cutoff', 'tune'],
-        'Load': ['load'],
-        'Save': ['save', 'name'],
-        'MIDI and presets': ['midi'],
-        'Mute': ['mute'],
-        'Navigate': ['select', 'scene', 'navigate', 'previous', 'next', 'show', 'scroll', 'toggle', 'move', 'same'],
-        'Mode': ['mode', 'status page'],
-        'Perform': ['playing', 'pattern', 'swing', 'morph', 'note', 'modify', 'bpm', 'switch'],
-        'Record': ['recording'],
-        'Rewind': ['rewind'],
-        'Looper': ['looper'],
-        'Scratch': ['scratch', 'record'],
-
-        'Device': ['sleep', 'reset', 'board'],
-    }
+    # categories = {
+    #     'Sub-mode': ['sub-mode', 'parameters'],  # prioritize
+    #     'Sequencer': ['sequencer'],
+    # 
+    #     'Edit': ['copy', 'paste', 'undo', 'clear', 'change', 'detune', 'length', 'starting', 'slice', 'process',
+    #              'volume', 'cutoff', 'tune'],
+    #     'Load': ['load'],
+    #     'Save': ['save', 'name'],
+    #     'MIDI and presets': ['midi'],
+    #     'Mute': ['mute'],
+    #     'Navigate': ['select', 'scene', 'navigate', 'previous', 'next', 'show', 'scroll', 'toggle', 'move', 'same'],
+    #     'Mode': ['mode', 'status page'],
+    #     'Perform': ['playing', 'pattern', 'swing', 'morph', 'note', 'modify', 'bpm', 'switch'],
+    #     'Record': ['recording'],
+    #     'Rewind': ['rewind'],
+    #     'Looper': ['looper'],
+    #     'Scratch': ['scratch', 'record'],
+    # 
+    #     'Device': ['sleep', 'reset', 'board'],
+    # }
     # Accumulate the seqs for the next table, associating the labels with each seq: (seq, labels) 
     # Create a set of all labels
     # For each seq
@@ -86,6 +102,7 @@ class WriteSequences:
         validate_files(md_in_file, md_out_file)
 
         # TODO Read category_pattern_file, replacing self.categories with local
+        categories = self.load_categories(category_pattern_file)
 
         if not button_sequences:
             if DEBUG_LOG_SEQS:
@@ -94,11 +111,12 @@ class WriteSequences:
 
         with open(file=md_out_file, mode="w") as fout:
             with MarkdownRenderer() as renderer:
+                labels = categories[False]
                 print("Formatting sequences to tables ...")
-                self.render_to_file(fout, renderer, button_sequences, self.categories)
+                self.render_to_file(fout, renderer, button_sequences, labels)
 
     @staticmethod
-    def render_to_file(fout, renderer, button_sequences, category_keywords):
+    def render_to_file(fout, renderer, button_sequences, category_labels):
         # TODO Derive category from description text, mapping keywords to known categories, using the best match
         # TODO Create columns 
         # TODO Create tables
@@ -119,14 +137,15 @@ class WriteSequences:
         class Section:
             section: str
             combos: [Combo]
-            
+
         sections: [Section] = []
 
+        unpacked_labels = [{label.name: label.keywords} for label in category_labels]
 
         for seq, next_seq in pairwise(button_sequences):
-            failure_count, found_categories = (
+            found_categories, failure_count = (
                 WriteSequences.handle_current_seq(all_categories, category_counts, failure_count,
-                                                  seq, category_keywords))
+                                                  seq, unpacked_labels))
 
             group = Section("title", combos=Combo(seq, []))
             group.section = button_sequences[0].section
@@ -135,7 +154,7 @@ class WriteSequences:
             # group.combos.all_cats = all_categories
             # group.combos.cat_counts = category_counts
             group.combos.found_cats = found_categories
-            
+
             all_categories, category_counts = (
                 WriteSequences.handle_next_seq(all_categories, category_counts, doc, seq, next_seq))
 
@@ -150,7 +169,7 @@ class WriteSequences:
         #         WriteSequences.handle_next_seq(all_categories, category_counts, doc, seq, next_seq))
 
         if failure_count:
-            print(f"Failed to find category for {failure_count} sequences.")
+            print(f"Failed to find category for {failure_count} sequences.", file=sys.stderr)
 
         print("rendering ...")
         md = renderer.render(doc)
@@ -276,6 +295,48 @@ class WriteSequences:
         cc = 1 if not column_count else column_count
         return ["|".join(elements * cc) + "\n"]
 
+    def load_categories(self, csv_file) -> {str: [SequenceCategory]}:
+        """ Loads CSV of sequence categorization data.
+        
+        CSV columns:
+        1. "label_or_section": Whether this is a label or section: '__label__', '__section__'.
+        2. "name": Name of the category, a string.
+        3. "keyword_1, keyword_2, ...": A series of columns of keywords, or key phrases. 
+
+        :return: Dictionary of category hierarchy level to ordered lists of SequenceCategory objects.
+        """
+        results = {True: [], False: []}
+
+        with open(csv_file, 'r') as csvfile:
+            reader = csv.DictReader(csvfile, skipinitialspace=True)
+
+            # Prepare to extract keywords from numbered columns
+            keyword_suffixes = [str(n) for n in range(1, KEYWORD_N_KEY_COUNT)]
+            keyword_columns = [KEYWORD_N_PREFIX_KEY + suffix for suffix in keyword_suffixes]
+
+            for row in reader:
+                row: dict  # Workaround for https://youtrack.jetbrains.com/issue/PY-60440
+
+                is_section = row[LABEL_OR_SECTION_CSV_HEADER] == SECTION_KEY
+                if not is_section and row[LABEL_OR_SECTION_CSV_HEADER] != LABEL_KEY:
+                    print(f"Skipping row, unrecognized {LABEL_OR_SECTION_CSV_HEADER}: {row}")
+                    continue
+
+                keywords = list(filter(None, [row.get(k, None) for k in keyword_columns]))
+                
+                category = SequenceCategory(
+                    is_section=is_section,
+                    name=row[NAME_KEY],
+                    keywords=keywords,
+                    is_default=(DEFAULT_NAME_KEY in keywords)
+                )
+
+                results[is_section].append(category)
+
+        if DEBUG_LOG_SEQS:
+            print(results, file=sys.stderr)
+
+        return results
 ## System control
 # Device
 # Mode

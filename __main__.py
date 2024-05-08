@@ -36,7 +36,7 @@ if __name__ == '__main__':
 
     parser.add_argument("--button-pattern-file", default=f"{script_dir}/qunmk2.patset", type=str,
                         help="Pattern filename for matching buttons (Default: 'qunmk2.patset').")
-    parser.add_argument("--category-pattern-file", default=f"f{script_dir}/qunmk2_categories.csv", 
+    parser.add_argument("--category-pattern-file", default=f"{script_dir}/qunmk2_categories.csv", 
                         type=str, help="Category pattern filename for organizing sequences "
                                        "(Default: 'qunmk2_categories.csv').")
 

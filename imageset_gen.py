@@ -1,5 +1,6 @@
 import csv
 import sys
+from dataclasses import dataclass
 
 from PIL import Image
 
@@ -14,17 +15,12 @@ ENABLE_RESIZE = True
 USE_THREADING_EXPERIMENTAL = False  # Causes truncated image rendering, buggy
 
 
+@dataclass
 class ImageLayer:
     image: Image
     layer_name: str
     x: int
     y: int
-
-    def __init__(self, image: Image, layer_name: str, x: int, y: int):
-        self.image = image
-        self.layer_name = layer_name
-        self.x = x
-        self.y = y
 
     def __repr__(self) -> str:
         return "<%s.%s layer_name=%s x=%d y=%d image=%s at 0x%X>" % (
@@ -63,7 +59,7 @@ class ImageSet:
         """
         results = {}
         with open(csv_file, 'r') as csvfile:
-            reader = csv.DictReader(csvfile)
+            reader = csv.DictReader(csvfile, skipinitialspace=True)
 
             for row in reader:
                 row: dict  # Workaround for https://youtrack.jetbrains.com/issue/PY-60440

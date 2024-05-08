@@ -153,12 +153,12 @@ def truncate(text, elide_length=15):
     return (text[:elide_length] + "...") if elide_length < len(text) else text
 
 
-def find_category_names(sentence: str, categories: {str: []}) -> [str]:
+def find_category_names(sentence: str, categories: [{str: [str]}]) -> [str]:
     """Finds category names for keywords found in the sentence.
     
     Args:
         sentence: A string containing the input sentence.
-        categories: A dictionary mapping category names to lists of keywords.
+        categories: An ordered list of dictionaries mapping category names to lists of keywords.
     
     Returns:
         A list of category names for which keywords are found in the sentence.
@@ -167,9 +167,10 @@ def find_category_names(sentence: str, categories: {str: []}) -> [str]:
     # Convert sentence to lowercase for case-insensitive matching
     lowercase_sentence = sentence.lower()
 
-    for name, keywords in categories.items():
-        # Check if any keyword is found in the sentence (ignoring case)
-        if any(keyword in lowercase_sentence for keyword in keywords):
-            found_names.append(name)
+    for category in categories:
+        for name, keywords in category.items():
+            # Check if any keyword is found in the sentence (ignoring case)
+            if any(keyword in lowercase_sentence for keyword in keywords):
+                found_names.append(name)
 
     return found_names
