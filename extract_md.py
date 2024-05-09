@@ -15,7 +15,7 @@ from patset import patterns_to_header, patterns_to_separators, patterns_map_to_b
 
 # For debugging parsing
 DEBUG_LOG_EXTRACT = False
-DEBUG_LEVEL_DEEP = True
+DEBUG_LEVEL_DEEP = False
 
 EXTRACT_CAPTURE_GROUP_INDEX = 1
 
@@ -115,12 +115,12 @@ class ExtractButtonsFromMarkdown:
         valid_token, mismatch = self.validate_cell_structure(cell)
 
         if valid_token:
-            sequence_map = self.extract_rawtext(valid_token)
+            sequence_map, text = self.extract_rawtext(valid_token)
 
             if sequence_map:
                 description_tablecell = tablerow.children[1]
-                result = ButtonSequence(mapping=sequence_map, line_no=tablerow.line_number, section_title=section_title,
-                                        description_tablecell=description_tablecell)
+                result = ButtonSequence(mapping=sequence_map, line_no=tablerow.line_number, text=text,
+                                        section_title=section_title, description_tablecell=description_tablecell)
         elif mismatch and DEBUG_LOG_EXTRACT:
             print(f"ignored cell at {tablerow.line_number}: {mismatch}", file=sys.stderr)
 
@@ -155,9 +155,9 @@ class ExtractButtonsFromMarkdown:
 
         return result
 
-    def extract_rawtext(self, rawtext) -> [{str: str}]:
+    def extract_rawtext(self, rawtext) -> ([{str: str}], str):
         result = self.extract_valid_sequence_map(rawtext.content)
-        return result
+        return result, rawtext.content
 
     def extract_valid_sequence_map(self, text: str) -> [{str: str}]:
         """

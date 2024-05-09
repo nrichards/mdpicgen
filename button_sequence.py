@@ -2,6 +2,7 @@ from mistletoe.block_token import TableCell
 from mistletoe.markdown_renderer import MarkdownRenderer
 
 import util
+from constants import MD_IMAGE_LINK_FORMAT, IMAGE_PATH_FORMAT
 from util import format_image_basename, truncate
 
 
@@ -9,30 +10,35 @@ class ButtonSequence:
     """Button command sequence data: full text, layer names, composite filename, and origin."""
     sequence_mapping: [{}]
     line_number: int
+    text: str
+
     basename: str = ""
     section: str = ""
-
     description: str = ""
     """Set with set_descriptions(), below."""
 
-    def __init__(self, *, mapping, line_no, section_title, description_tablecell: TableCell):
+    def __init__(self, *, mapping, line_no, text, section_title, description_tablecell: TableCell):
         self.sequence_mapping = mapping
         self.line_number = line_no
+        self.text = text
+
+        self.basename = format_image_basename(self.sequence_mapping)
         self.section = section_title
         self.description_tablecell = description_tablecell
-        self.basename = format_image_basename(self.sequence_mapping)
 
     def __repr__(self) -> str:
-        return ("<%s.%s sequence_mapping=%s line_number=%d section='%s' desc-tokens=%d description='%s' basename='%s' "
-                "at 0x%X>") % (
+        return ("<%s.%s sequence_mapping=%s line_number=%d text='%s' "
+                "basename='%s' section='%s' desc-tokens=%d description='%s' at 0x%X>") % (
             self.__class__.__module__,
             self.__class__.__name__,
             self.sequence_mapping,
             self.line_number,
+            self.text,
+
+            self.basename,
             truncate(self.section),
             self.description_tablecell is not None,
             truncate(self.description),
-            self.basename,
             id(self),
         )
 
@@ -73,3 +79,9 @@ class ButtonSequence:
         descriptions = ButtonSequence.descriptions(button_sequences, renderer)
         for seq, desc in zip(button_sequences, descriptions):
             seq.description = desc
+
+    def md_image_link(self, image_out_path: str, opt: util.ImageOpt):
+        new_image_path = IMAGE_PATH_FORMAT.format(image_out_path=image_out_path, basename=self.basename,
+                                                  extension=opt.extension())
+        result = MD_IMAGE_LINK_FORMAT.format(image_path=new_image_path)
+        return result

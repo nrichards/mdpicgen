@@ -6,7 +6,7 @@ import shutil
 from mistletoe import Document
 from mistletoe.markdown_renderer import MarkdownRenderer
 
-from constants import HTML_BREAK_PATTERN, HTML_BREAK
+from constants import HTML_BREAK_PATTERN, HTML_BREAK, IMAGE_PATH_FORMAT, MD_IMAGE_LINK_FORMAT
 from button_sequence import ButtonSequence
 from util import ImageOpt
 
@@ -47,7 +47,8 @@ def write_updated_markdown(button_sequences, fin, fout, image_out_path, opt):
         if seq.line_number == line_count:
             # alter the line
             out_line = update_or_replace_image_in_markdown(
-                in_line, f"{image_out_path}/{seq.basename}.{opt.extension()}")
+                in_line, IMAGE_PATH_FORMAT.format(image_out_path=image_out_path, basename=seq.basename,
+                                                  extension=opt.extension()))
 
             # Prepare for the next opportunity to mutate a button sequence
             try:
@@ -96,7 +97,7 @@ def update_or_replace_image_in_markdown(line, new_image_path):
                 # ... or
                 # IN: ' | desc'
                 # OUT: ' ![](new_img)'
-                modified_line = f" ![]({new_image_path}) {segment}"
+                modified_line = f" {MD_IMAGE_LINK_FORMAT.format(image_path=new_image_path)} {segment}"
 
             column_one = False
 

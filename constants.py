@@ -2,6 +2,8 @@
 
 HTML_BREAK_PATTERN = r"<br/?>"
 HTML_BREAK = "<br>"
+IMAGE_PATH_FORMAT = "{image_out_path}/{basename}.{extension}"
+MD_IMAGE_LINK_FORMAT = "![]({image_path})"
 
 # TODO save to user-editable file for customizability
 # Renders images sized to the bounding box of this layer

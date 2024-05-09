@@ -107,10 +107,11 @@ class WriteSequences:
                 print("Formatting sequences to tables ...")
                 labels = categories[LABEL_VALUE]
                 sections = categories[SECTION_VALUE]
-                self.render_to_file(fout, renderer, button_sequences, labels, sections)
+                self.render_to_file(fout, renderer, button_sequences, image_out_path, opt, labels, sections)
 
     @staticmethod
-    def render_to_file(fout, renderer, button_sequences, category_labels, category_sections):
+    def render_to_file(fout, renderer, button_sequences, image_out_path, opt: ImageOpt,
+                       category_labels, category_sections):
         """Derive category from description text, mapping keywords to known categories, using the best match."""
         # TODO 
         # TODO Create columns 
@@ -141,7 +142,8 @@ class WriteSequences:
                 continue
             elif len(found_section_names) > 1:
                 print(
-                    f"Guessing section, unexpectedly found multiple sections for '{seq.description_printable()}': {found_section_names}")
+                    f"Guessing section, unexpectedly found multiple sections for "
+                    f"'{seq.description_printable()}': {found_section_names}")
                 pass
                 # # Count stuff
                 # all_found_names.update(found_names)
@@ -195,6 +197,8 @@ class WriteSequences:
         #     all_categories, category_counts = (
         #         WriteSequences.handle_next_seq(all_categories, category_counts, doc, seq, next_seq))
 
+        # Build output
+
         for section in sections:
             WriteSequences.print_next_section_title(doc, section.name)
 
@@ -205,13 +209,22 @@ class WriteSequences:
             headers = WriteSequences.to_table_line(unique_column_headings)
             header_aligns = WriteSequences.to_table_line(["--"], len(unique_column_headings))
             header_text = headers + header_aligns
+
+            # TODO organize into columns
+            # TODO iterate over all columns in step
+            
+            rows = []
+            combo:Combo
+            for combo in section.combos:
+                rows.append(f"{combo.seq.text}<br>{combo.seq.md_image_link(image_out_path, opt)}"
+                            f"<br>{combo.seq.description}")
             # columns = ["SHIFT + B1 <br> ![label-1.1](link-1.1) <br> Cell 1.1 text",
             #            "SHIFT + B2 <br> ![label-2.1](link-2.1) <br> Cell 2.1 text",
             #            "SHIFT + B3 <br> ![label-3.1](link-3.1) <br> Cell 3.1 text"]
             # rows = [columns[0],
             #         "SHIFT + B1 <br> ![label-1.2](link-1.2) <br> Cell 1.2 text",
             #         "SHIFT + B1 <br> ![label-1.3](link-1.3) <br> Cell 1.3 text"]
-            row_text = WriteSequences.to_table_line([" \n"])
+            row_text = WriteSequences.to_table_line(rows)
             table_text = header_text + row_text
 
             doc.children.append(WriteSequences.create_table(table_text))
