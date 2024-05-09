@@ -36,28 +36,21 @@ class SequenceCategory:
     is_default: bool
 
 
+@dataclass
+class Combo:
+    """Maps sequences to matched categories."""
+    seq: ButtonSequence
+    found_categories: [str]
+
+
+@dataclass
+class Section:
+    """Maps section to sequences."""
+    name: str
+    combos: [Combo]
+
+
 class WriteSequences:
-    # TODO store in combosheet file
-    # categories = {
-    #     'Sub-mode': ['sub-mode', 'parameters'],  # prioritize
-    #     'Sequencer': ['sequencer'],
-    # 
-    #     'Edit': ['copy', 'paste', 'undo', 'clear', 'change', 'detune', 'length', 'starting', 'slice', 'process',
-    #              'volume', 'cutoff', 'tune'],
-    #     'Load': ['load'],
-    #     'Save': ['save', 'name'],
-    #     'MIDI and presets': ['midi'],
-    #     'Mute': ['mute'],
-    #     'Navigate': ['select', 'scene', 'navigate', 'previous', 'next', 'show', 'scroll', 'toggle', 'move', 'same'],
-    #     'Mode': ['mode', 'status page'],
-    #     'Perform': ['playing', 'pattern', 'swing', 'morph', 'note', 'modify', 'bpm', 'switch'],
-    #     'Record': ['recording'],
-    #     'Rewind': ['rewind'],
-    #     'Looper': ['looper'],
-    #     'Scratch': ['scratch', 'record'],
-    # 
-    #     'Device': ['sleep', 'reset', 'board'],
-    # }
     # Accumulate the seqs for the next table, associating the labels with each seq: (seq, labels) 
     # Create a set of all labels
     # For each seq
@@ -118,28 +111,16 @@ class WriteSequences:
 
     @staticmethod
     def render_to_file(fout, renderer, button_sequences, category_labels, category_sections):
-        # TODO Derive category from description text, mapping keywords to known categories, using the best match
+        """Derive category from description text, mapping keywords to known categories, using the best match."""
+        # TODO 
         # TODO Create columns 
         # TODO Create tables
-        # TODO Order in selection priority
         ButtonSequence.init_description(button_sequences, renderer)
 
         # all_categories = set()  # Track unique categories across sentences
         # category_counts = {}  # Count occurrences of each category
         doc = Document("")
         failure_count = 0
-
-        @dataclass
-        class Combo:
-            """Maps sequences to matched categories."""
-            seq: ButtonSequence
-            found_categories: [str]
-
-        @dataclass
-        class Section:
-            """Maps section to sequences."""
-            name: str
-            combos: [Combo]
 
         sections: [Section] = []
 
@@ -151,20 +132,26 @@ class WriteSequences:
         for seq, next_seq in pairwise(button_sequences):
             found_label_names = find_category_names(seq.description, unpacked_labels)
             found_section_names = find_category_names(seq.section, unpacked_sections)
-    
+
             if not len(found_label_names) or not len(found_section_names):
-                print(f"Failed to find category (label or section) for '{seq.description_printable()}'", file=sys.stderr)
+                print(f"Failed to find category (label or section) for '{seq.description_printable()}'",
+                      file=sys.stderr)
 
                 failure_count += 1
                 continue
             elif len(found_section_names) > 1:
-                print(f"Guessing section, unexpectedly found multiple sections for '{seq.description_printable()}': {found_section_names}")
+                print(
+                    f"Guessing section, unexpectedly found multiple sections for '{seq.description_printable()}': {found_section_names}")
                 pass
-                # WriteSequences.handle_seq_category_find_succeed(all_found_names, name_counts, found_names, seq)
+                # # Count stuff
+                # all_found_names.update(found_names)
+                # 
+                # for name in found_names:
+                #     name_counts[name] = name_counts.get(name, 0) + 1
 
             # TODO Decide on a category for each line
             combo = Combo(seq, found_label_names)
-            
+
             # Add to the current section
             if not section:
                 section_name = found_section_names[0]
@@ -182,7 +169,7 @@ class WriteSequences:
             # Prepare for next iteration, handle found next section
             if seq.section is not next_seq.section:
                 section = None
-                
+
             #     # Dump the accumulated table data: headings and fields
             # 
             #     all_categories, category_counts = set(), {}
@@ -210,11 +197,11 @@ class WriteSequences:
 
         for section in sections:
             WriteSequences.print_next_section_title(doc, section.name)
-            
+
             # Collect Categories to be used
             column_headings = [c.found_categories[0] for c in section.combos]
             unique_column_headings = list(set(column_headings))
-            
+
             headers = WriteSequences.to_table_line(unique_column_headings)
             header_aligns = WriteSequences.to_table_line(["--"], len(unique_column_headings))
             header_text = headers + header_aligns
@@ -224,12 +211,11 @@ class WriteSequences:
             # rows = [columns[0],
             #         "SHIFT + B1 <br> ![label-1.2](link-1.2) <br> Cell 1.2 text",
             #         "SHIFT + B1 <br> ![label-1.3](link-1.3) <br> Cell 1.3 text"]
-            # row_text = WriteSequences.to_table_line(rows)
-            row_text = [" \n"]
+            row_text = WriteSequences.to_table_line([" \n"])
             table_text = header_text + row_text
-    
+
             doc.children.append(WriteSequences.create_table(table_text))
-            
+
         if failure_count:
             print(f"Failed to find category for {failure_count} sequences.", file=sys.stderr)
 
@@ -240,59 +226,6 @@ class WriteSequences:
     @staticmethod
     def find_section_by_name(section_name, sections):
         return next((s for s in sections if s.name == section_name), None)
-
-    @staticmethod
-    def handle_current_seq(all_found_names, name_counts, failure_count, seq, category_keywords) -> ([str], int):
-        # Collect data for the current sequence
-
-        found_names = find_category_names(seq.description, category_keywords)
-
-        if not len(found_names):
-            # Handle missing category for this seq
-            failure_count = (
-                WriteSequences.handle_seq_category_find_fail(failure_count, seq))
-        else:
-            # TODO Decide on a category for each line
-            WriteSequences.handle_seq_category_find_succeed(all_found_names, name_counts, found_names, seq)
-
-        return found_names, failure_count
-
-    # @staticmethod
-    # def handle_next_seq(all_categories, category_counts, doc, seq, next_seq):
-    #     if seq.section is not next_seq.section:
-    #         # if DEBUG_LOG_SEQS:
-    #         #     print(f"Writing table {}", file=sys.stderr)
-    # 
-    #         # TODO Dump all the categories at once, zipping them together
-    # 
-    #         # Dump the accumulated table data: headings and fields
-    #         WriteSequences.write_table(all_categories, category_counts, doc)
-    # 
-    #         WriteSequences.print_next_section_title(doc, next_seq.section)
-    # 
-    #         all_categories, category_counts = set(), {}
-    # 
-    #     return all_categories, category_counts
-
-    @staticmethod
-    def handle_seq_category_find_succeed(all_found_names, name_counts, found_names, seq):
-        if DEBUG_LOG_SEQS:
-            print(f"Found category names {found_names} for desc: '{seq.description_printable(elide=False)}'",
-                  file=sys.stderr)
-
-        # Count stuff
-        all_found_names.update(found_names)
-
-        for name in found_names:
-            name_counts[name] = name_counts.get(name, 0) + 1
-
-    # @staticmethod
-    # def handle_seq_category_find_fail(failure_count, seq):
-    #     if DEBUG_LOG_SEQS:
-    #         print(f"Failed to find category (label or section) for '{seq.description_printable()}'", file=sys.stderr)
-    # 
-    #     failure_count += 1
-    #     return failure_count
 
     @staticmethod
     def create_title_list(text, line_number=1):
@@ -321,33 +254,6 @@ class WriteSequences:
         # TRICKY: line_number is required and is not set in the constructor, only in block_token.tokenize()
         result.line_number = line_number
         return result
-
-    @staticmethod
-    def write_table(all_categories, category_counts, doc):
-        # Sort category counts by count (descending)
-        sorted_category_counts = dict(
-            sorted(category_counts.items(), key=lambda item: item[1], reverse=True))
-
-        summary = list(all_categories), sorted_category_counts
-        print(summary)
-
-        WriteSequences.print_prior_table_contents(doc)
-
-    @staticmethod
-    def print_prior_table_contents(doc: Document):
-        headers = WriteSequences.to_table_line(["Thing1", "Thing2", "Thing3"])
-        header_aligns = WriteSequences.to_table_line(["--"], 3)
-        header_text = headers + header_aligns
-        columns = ["SHIFT + B1 <br> ![label-1.1](link-1.1) <br> Cell 1.1 text",
-                   "SHIFT + B2 <br> ![label-2.1](link-2.1) <br> Cell 2.1 text",
-                   "SHIFT + B3 <br> ![label-3.1](link-3.1) <br> Cell 3.1 text"]
-        rows = [columns[0],
-                "SHIFT + B1 <br> ![label-1.2](link-1.2) <br> Cell 1.2 text",
-                "SHIFT + B1 <br> ![label-1.3](link-1.3) <br> Cell 1.3 text"]
-        row_text = WriteSequences.to_table_line(rows)
-        table_text = header_text + row_text
-
-        doc.children.append(WriteSequences.create_table(table_text))
 
     @staticmethod
     def print_next_section_title(doc: Document, title):
@@ -405,39 +311,3 @@ class WriteSequences:
             print(results, file=sys.stderr)
 
         return results
-## System control
-# Device
-# Mode
-# Sub-mode
-# Sequencer
-# Looper
-## Performance
-# MIDI and presets
-# Sound signal performance
-# Note performance
-## Session and Looper data
-# Info
-# Load
-# Save
-## Sequencer
-# Control
-# Performance
-# Edit
-## Play Mode: SEQ CFG sub-mode
-# Performance: Run multiple sequence patterns at the same time
-## Looper
-# Navigation
-# Performance
-# Edit
-## Sequencer Parameter Locking
-# Navigation
-# Edit
-## Granular
-# Edit
-# Navigate
-# Record
-# Load
-## Vinyl Record Scratch
-# Scratch
-# Rewind
-# Mute

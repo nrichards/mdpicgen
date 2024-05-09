@@ -1,6 +1,7 @@
 label_or_section, name, keyword_1, keyword_2, keyword_3, keyword_4, keyword_5, keyword_6, keyword_7, keyword_8, keyword_9, keyword_10, keyword_11, keyword_12, keyword_13, keyword_14, keyword_15, keyword_16, keyword_17, keyword_18, keyword_19, keyword_20
 # Earlier lines will be matched before later lines.
 # TIP: use longer multi-word keywords in earlier lines, otherwise smaller single-word keywords could inappropriately match.
+# TIP: also consider changing the data to disambiguate conflicts.
 __label__, Mode, mode, status page
 __label__, Sub-mode, sub-mode, parameters
 __label__, Scratch, scratch, record
@@ -26,4 +27,40 @@ __section__, PLY:SEQ CONFIG, PLY:SEQ CONFIG
 __section__, Monitor mode, Monitor mode
 __section__, Granular, Granular operation
 __section__, Session, Session
-
+############### HAND EDITED CATEGORY LIST #####################
+## System control
+# Device
+# Mode
+# Sub-mode
+# Sequencer
+# Looper
+## Performance
+# MIDI and presets
+# Sound signal performance
+# Note performance
+## Session and Looper data
+# Info
+# Load
+# Save
+## Sequencer
+# Control
+# Performance
+# Edit
+## Play Mode: SEQ CFG sub-mode
+# Performance: Run multiple sequence patterns at the same time
+## Looper
+# Navigation
+# Performance
+# Edit
+## Sequencer Parameter Locking
+# Navigation
+# Edit
+## Granular
+# Edit
+# Navigate
+# Record
+# Load
+## Vinyl Record Scratch
+# Scratch
+# Rewind
+# Mute
