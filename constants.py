@@ -2,6 +2,8 @@
 
 HTML_BREAK_PATTERN = r"<br/?>"
 HTML_BREAK = "<br>"
+IMAGE_PATH_FORMAT = "{image_out_path}/{basename}.{extension}"
+MD_IMAGE_LINK_FORMAT = "![]({image_path})"
 
 # TODO save to user-editable file for customizability
 # Renders images sized to the bounding box of this layer
@@ -32,3 +34,13 @@ IMAGE_FILE_CSV_HEADER = 'image_file'
 GIF_BEGIN_FRAME_DURATION_MS = 1000
 GIF_MID_FRAME_DURATION_MS = 400
 GIF_END_FRAME_DURATION_MS = 2000
+
+LABEL_OR_SECTION_CSV_HEADER = 'label_or_section'
+LABEL_KEY = '__label__'
+SECTION_KEY = '__section__'
+NAME_KEY = 'name'
+KEYWORD_N_PREFIX_KEY = 'keyword_'
+KEYWORD_N_KEY_COUNT = 21
+DEFAULT_NAME_KEY = '__default__'
+SECTION_VALUE = True
+LABEL_VALUE = False

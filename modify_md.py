@@ -3,15 +3,15 @@ import sys
 import os
 import shutil
 
-import mistletoe
+from mistletoe import Document
 from mistletoe.markdown_renderer import MarkdownRenderer
 
-from constants import HTML_BREAK_PATTERN, HTML_BREAK
+from constants import HTML_BREAK_PATTERN, HTML_BREAK, IMAGE_PATH_FORMAT, MD_IMAGE_LINK_FORMAT
 from button_sequence import ButtonSequence
 from util import ImageOpt
 
 # For debugging parsing
-DEBUG_LOG_MODIFY = False
+DEBUG_LOG_MODIFY = True
 
 
 def format_markdown(markdown_filename):
@@ -20,37 +20,45 @@ def format_markdown(markdown_filename):
 
 
 def write_markdown(md_out_file, image_out_path, md_in_file, button_sequences: [ButtonSequence], opt: ImageOpt):
+    validate_files(md_in_file, md_out_file)
+
     if not button_sequences:
         shutil.copyfile(md_in_file, md_out_file)
         return
 
-    seqs = iter(button_sequences)
-    seq = next(seqs)
+    with open(md_in_file, "r") as fin:
+        with open(md_out_file, "w") as fout:
+            write_updated_markdown(button_sequences, fin, fout, image_out_path, opt)
 
+
+def validate_files(md_in_file, md_out_file):
     if os.path.normpath(md_in_file) == os.path.normpath(md_out_file):
         raise FileExistsError(f"Cannot write to same file that is being read from: \"{md_in_file}\"")
 
+
+def write_updated_markdown(button_sequences, fin, fout, image_out_path, opt):
+    seqs = iter(button_sequences)
+    seq = next(seqs)
     line_count = 0
-    with open(md_in_file, "r") as fin:
-        with open(md_out_file, "w") as fout:
-            for in_line in fin:
-                line_count += 1
+    for in_line in fin:
+        line_count += 1
 
-                out_line = in_line
-                if seq.line_number == line_count:
-                    # alter the line
-                    out_line = update_or_replace_image_in_markdown(
-                        in_line, f"{image_out_path}/{seq.basename}.{opt.extension()}")
+        out_line = in_line
+        if seq.line_number == line_count:
+            # alter the line
+            out_line = update_or_replace_image_in_markdown(
+                in_line, IMAGE_PATH_FORMAT.format(image_out_path=image_out_path, basename=seq.basename,
+                                                  extension=opt.extension()))
 
-                    # Prepare for the next opportunity to mutate a button sequence
-                    try:
-                        seq = next(seqs)
-                    except StopIteration:
-                        pass
+            # Prepare for the next opportunity to mutate a button sequence
+            try:
+                seq = next(seqs)
+            except StopIteration:
+                pass
 
-                fout.write(out_line)
-                if DEBUG_LOG_MODIFY:
-                    print("OUT: " + out_line.strip('\n'), file=sys.stderr)
+        fout.write(out_line)
+        if DEBUG_LOG_MODIFY:
+            print("OUT: " + out_line.strip('\n'), file=sys.stderr)
 
 
 def update_or_replace_image_in_markdown(line, new_image_path):
@@ -89,7 +97,7 @@ def update_or_replace_image_in_markdown(line, new_image_path):
                 # ... or
                 # IN: ' | desc'
                 # OUT: ' ![](new_img)'
-                modified_line = f" ![]({new_image_path}) {segment}"
+                modified_line = f" {MD_IMAGE_LINK_FORMAT.format(image_path=new_image_path)} {segment}"
 
             column_one = False
 
@@ -111,5 +119,5 @@ class FormatMarkdown:
     def __init__(self, markdown_filename):
         with open(markdown_filename, "r") as fin:
             with MarkdownRenderer(normalize_whitespace=True) as renderer:
-                document = mistletoe.Document(fin)
+                document = Document(fin)
                 self.formatted = renderer.render(document)

@@ -1,4 +1,7 @@
 from pathlib import Path
+from typing import Iterable
+
+from mistletoe.token import Token
 
 from constants import GIF_IMAGE_EXTENSION, PNG_IMAGE_EXTENSION, SHORT_NAME_INFIX_SEPARATOR
 
@@ -90,3 +93,84 @@ def strip_whitespace(sequence):
 
 def find_first_non_null_index(a_list):
     return next((i for i, x in enumerate(a_list) if x is not None), -1)
+
+
+def print_markdown_tree(mistletoe_children: [Token], level=0):
+    """
+    print a formatted tree to stdout of mistletoe Tokens
+    :param mistletoe_children: list of mistletoe Tokens
+    :param level: 
+    :return: 
+    """
+
+    def print_helper():
+        current = padding * level + str(child)
+        print(current)
+
+    padding = "|   "
+    children = mistletoe_children
+
+    if not is_iterable(children):
+        print_helper()
+        return
+
+    for child in children:
+        print_helper()
+
+        if hasattr(child, 'children') and child.children:
+            print_markdown_tree(child.children, level + 1)
+
+
+def is_iterable(obj):
+    return isinstance(obj, Iterable)
+
+
+def find_nearest_less_than_or_equal(list_of_tuples: [(int, str)], search_value):
+    """Finds the nearest less-than-or-equal number from a list of tuples.
+  
+    Args:
+        list_of_tuples: A list of tuples where the first element is an integer.
+        search_value: The integer to search for.
+  
+    Returns:
+        A tuple containing the nearest less-than-or-equal number and its corresponding data,
+         or None if no such number exists.
+    """
+    closest_value = None
+    closest_data = None
+
+    for num, _ in list_of_tuples:
+        if num <= search_value:
+            # Update if closer or the first match
+            if closest_value is None or num >= closest_value:
+                closest_value = num
+                closest_data = _
+
+    return closest_value, closest_data
+
+
+def truncate(text, elide_length=15):
+    return (text[:elide_length] + "...") if elide_length < len(text) else text
+
+
+def find_category_names(sentence: str, categories: [{str: [str]}]) -> [str]:
+    """Finds category names for keywords found in the sentence.
+    
+    Args:
+        sentence: A string containing the input sentence.
+        categories: An ordered list of dictionaries mapping category names to lists of keywords.
+    
+    Returns:
+        A list of category names for which keywords are found in the sentence.
+    """
+    found_names = []
+    # Convert sentence to lowercase for case-insensitive matching
+    lowercase_sentence = sentence.lower()
+
+    for category in categories:
+        for name, keywords in category.items():
+            # Check if any keyword is found in the sentence (ignoring case)
+            if any(keyword in lowercase_sentence for keyword in keywords):
+                found_names.append(name)
+
+    return found_names
