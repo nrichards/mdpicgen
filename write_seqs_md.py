@@ -2,8 +2,9 @@ import sys
 from itertools import pairwise
 from dataclasses import dataclass
 import csv
+from collections import Counter
 
-from mistletoe.block_token import Paragraph, Table, Document
+from mistletoe.block_token import Paragraph, Table, Document, Heading
 from mistletoe.markdown_renderer import MarkdownRenderer, BlankLine
 from mistletoe.token import Token
 
@@ -113,13 +114,8 @@ class WriteSequences:
     def render_to_file(fout, renderer, button_sequences, image_out_path, opt: ImageOpt,
                        category_labels, category_sections):
         """Derive category from description text, mapping keywords to known categories, using the best match."""
-        # TODO 
-        # TODO Create columns 
-        # TODO Create tables
         ButtonSequence.init_description(button_sequences, renderer)
 
-        # all_categories = set()  # Track unique categories across sentences
-        # category_counts = {}  # Count occurrences of each category
         doc = Document("")
         failure_count = 0
 
@@ -145,12 +141,7 @@ class WriteSequences:
                     f"Guessing section, unexpectedly found multiple sections for "
                     f"'{seq.description_printable()}': {found_section_names}")
                 pass
-                # # Count stuff
-                # all_found_names.update(found_names)
-                # 
-                # for name in found_names:
-                #     name_counts[name] = name_counts.get(name, 0) + 1
-
+            
             # TODO Decide on a category for each line
             combo = Combo(seq, found_label_names)
 
@@ -172,31 +163,6 @@ class WriteSequences:
             if seq.section is not next_seq.section:
                 section = None
 
-            #     # Dump the accumulated table data: headings and fields
-            # 
-            #     all_categories, category_counts = set(), {}
-
-            # all_categories, category_counts = (
-            #     WriteSequences.handle_next_seq(all_categories, category_counts, doc, seq, next_seq))
-
-            # TODO Dump all the categories at once, zipping them together
-        # found_categories, failure_count = (
-        #     WriteSequences.handle_current_seq(all_categories, category_counts, failure_count,
-        #                                       seq, unpacked_labels))
-
-        # WriteSequences.write_table(all_categories, category_counts, doc)
-        # WriteSequences.print_next_section_title(doc, next_seq.section)
-
-        # WriteSequences.print_next_section_title(doc, button_sequences[0].section)
-        # 
-        # for seq, next_seq in pairwise(button_sequences):
-        #     failure_count = (
-        #         WriteSequences.handle_current_seq(all_categories, category_counts, failure_count,
-        #                                           seq, category_keywords))
-        # 
-        #     all_categories, category_counts = (
-        #         WriteSequences.handle_next_seq(all_categories, category_counts, doc, seq, next_seq))
-
         # Build output
 
         for section in sections:
@@ -207,20 +173,37 @@ class WriteSequences:
             unique_column_headings = list(set(column_headings))
 
             headers = WriteSequences.to_table_line(unique_column_headings)
-            header_aligns = WriteSequences.to_table_line(["--"], len(unique_column_headings))
+            header_aligns = WriteSequences.to_table_line([":--:"], len(unique_column_headings))
             header_text = headers + header_aligns
 
-            # TODO organize into columns
-            # TODO iterate over all columns in step
-            
-            rows = []
-            combo:Combo
-            for combo in section.combos:
-                rows.append(f"{combo.seq.text}<br>{combo.seq.md_image_link(image_out_path, opt)}"
-                            f"<br>{combo.seq.description_printable()}")
-                
-            row_text = WriteSequences.to_table_line(rows)
-            table_text = header_text + row_text
+            # Count label frequency
+            elements = [e
+                        for c in [combo.found_categories for combo in section.combos]
+                        for e in c]
+            freq = {e: elements.count(e) for e in elements}
+            freq_sorted = Counter(freq).most_common()
+
+            columns = {}
+            combo: Combo
+            combos = section.combos.copy()
+            for label, n in freq_sorted:
+                just_found = [combo for combo in combos if label in combo.found_categories]
+                not_found = [combo for combo in combos if label not in combo.found_categories]
+                combos = not_found
+                if just_found:
+                    columns[label] = just_found
+
+            table_lines = []
+            for _ in range(next(iter(freq_sorted))[1]):
+                rows = []
+                for column in columns:
+                    if columns[column]:
+                        combo = columns[column].pop(0)
+                        rows.append(f"{combo.seq.text}<br>{combo.seq.md_image_link(image_out_path, opt)}"
+                                    f"<br>{combo.seq.description_printable()}")
+
+                table_lines.append(WriteSequences.to_table_line(rows)[0])
+            table_text = header_text + table_lines
 
             doc.children.append(WriteSequences.create_table(table_text))
 
@@ -238,7 +221,7 @@ class WriteSequences:
     @staticmethod
     def create_title_list(text, line_number=1):
         return [WriteSequences.create_blankline(line_number),
-                WriteSequences.create_paragraph(text, line_number),
+                WriteSequences.create_heading(text, line_number),
                 WriteSequences.create_blankline()]
 
     @staticmethod
@@ -252,6 +235,13 @@ class WriteSequences:
     def create_paragraph(text, line_number=1) -> [Token]:
         lines = [text + " \n"]
         result = Paragraph(lines)
+        # TRICKY: line_number is required and is not set in the constructor, only in block_token.tokenize()
+        result.line_number = line_number
+        return result
+    
+    @staticmethod
+    def create_heading(text, line_number=1, level=1) -> [Token]:
+        result: Heading = Heading((level, text, ''))
         # TRICKY: line_number is required and is not set in the constructor, only in block_token.tokenize()
         result.line_number = line_number
         return result
