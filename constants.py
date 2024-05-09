@@ -40,3 +40,5 @@ NAME_KEY = 'name'
 KEYWORD_N_PREFIX_KEY = 'keyword_'
 KEYWORD_N_KEY_COUNT = 21
 DEFAULT_NAME_KEY = '__default__'
+SECTION_VALUE = True
+LABEL_VALUE = False

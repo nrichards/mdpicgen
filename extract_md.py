@@ -78,9 +78,9 @@ class ExtractButtonsFromMarkdown:
                          for token in doc.children if type(token) is Heading]
         
         result = [
-            xx
+            seq
             for token in doc.children if type(token) is Table
-            for xx in self.extract_titled_table(token, heading_lines)
+            for seq in self.extract_titled_table(token, heading_lines)
         ]
 
         return result
